@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05070a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sondres scheme">
+<title>Sondres scheme</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="ikon/ikon-192.png">
+<link rel="apple-touch-icon" href="ikon/ikon-180.png">
+<link rel="stylesheet" href="css/app.css">
+<script type="importmap">
+{ "imports": {
+    "preact": "./vendor/preact.module.js",
+    "preact/hooks": "./vendor/preact-hooks.module.js",
+    "htm": "./vendor/htm.module.js",
+    "three": "./vendor/three.module.min.js",
+    "three/OrbitControls": "./vendor/OrbitControls.js"
+} }
+</script>
+</head>
+<body>
+<div id="app"><div class="lastar mono">&gt;&gt;&gt; SONDRES SCHEME // LASTAR …</div></div>
+<script type="module" src="js/app.js"></script>
+<script>
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
+</script>
+</body>
+</html>

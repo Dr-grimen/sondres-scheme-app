@@ -16,7 +16,8 @@ export function Selskapet({ tilstand }) {
   const grense = Date.now() - 2 * 3600 * 1000;
   const vis = vald ? tankar.filter((x) => x.agent === vald) : tankar;
   const leiar = (sel && sel.leiar) || {}; const valg = (sel && sel.val) || {}; const sting = (sel && sel.storting) || {};
-  const pn = (sel && sel.personnamn) || {}; const P = (a) => pn[a] || a; const minne = (sel && sel.minne) || {}; const post = (sel && sel.post) || [];
+  const pn = (sel && sel.personnamn) || {}; const P = (a) => pn[a] || a;
+  const moete = (sel && sel.moete) || {}; const natt = (sel && sel.nattforslag) || {}; const minne = (sel && sel.minne) || {}; const post = (sel && sel.post) || [];
   const oppdrag = leiar.oppdrag || {}; const mandat = leiar.mandat || {};
   return html`
     <div class="fase">>>> SELSKAPET // ${agentar.length} ROLLEAGENTAR · ${tankar.length} TANKAR I DAG</div>
@@ -31,6 +32,14 @@ export function Selskapet({ tilstand }) {
       <div class="scroll"><table><thead><tr><th>Plass</th><th>Agent</th><th>Rolle</th><th class="r">Avkastning</th><th class="r">Poeng</th><th class="r">Funn</th><th class="r">Løn</th></tr></thead><tbody>
         ${(valg.rangering || []).map((r) => html`<tr class=${r.agent === valg.ceo ? 'fremja' : ''}><td class="r">${r.plass}</td><td>${P(r.agent)} <small class="stille">${r.agent}</small></td><td><span class="merk ${(valg.roller || {})[r.agent] === 'ceo' ? 'gron' : ((valg.roller || {})[r.agent] === 'storting' ? 'ok' : '')}">${((valg.roller || {})[r.agent] || '').toUpperCase()}</span></td><td class="r ${r.pnl > 0 ? 'opp' : (r.pnl < 0 ? 'ned' : '')}">${r.pnl == null ? 'ikkje måleleg' : fmt(r.pnl, 2)}</td><td class="r">${fmt(r.poeng, 1)}</td><td class="r">${fmt(r.hendingar)}</td><td class="r">${fmt((valg.loen || {})[r.agent])}</td></tr>`)}
       </tbody></table></div>
+    </section>` : null}
+    ${(moete.innlegg || []).length ? html`<section class="kort"><h2>Nattmøtet <small>${dato(moete.ts)} · ${moete.n} innlegg · ${moete.eigedel || ''}</small></h2>
+      <p class="stille">${moete.maal}</p>
+      <div class="logg">${moete.innlegg.map((i) => html`<div class="rad"><span class="agent">${i.namn}</span><span>${i.seier}${i.kjelde ? html` <span class="stille">[${i.kjelde}]</span>` : null}</span></div>`)}</div>
+      ${(natt.genom || []).length ? html`<p class="stille" style="margin-top:8px">Av dette bygde dei ${natt.n} nye strategiar på ${natt.eigedel}:</p>
+        <div class="scroll"><table><thead><tr><th>Genom</th><th>Inngang</th><th>Utgang</th><th>Bygd på</th></tr></thead><tbody>
+          ${natt.genom.slice(0, 8).map((g) => html`<tr><td class="mono">${g.id}</td><td>${g.inn[0].p}</td><td>${g.ut.type}${g.ut.dagsslutt ? ' + flat før natta' : ''}</td><td class="status">${g.kjelde.monster} t=${g.kjelde.t}, n=${fmt(g.kjelde.n)} · ${g.kjelde.maalt_av}</td></tr>`)}
+        </tbody></table></div>` : null}
     </section>` : null}
     ${(sting.saker || []).length ? html`<section class="kort"><h2>Voteringar <small>CEO har ${(valg.stemmevekt || {})[valg.ceo] || 8} stemmer · fleirtal ${sting.fleirtal} av ${sting.stemmer_totalt}</small></h2>
       ${sting.saker.map((sak) => html`<div class="agent"><div class="n"><span>${sak.tekst}</span><small class="${sak.vedteke ? 'gron' : 'raud'}">${sak.vedteke ? 'VEDTEKE' : 'FALT'} ${sak.ja}–${sak.nei}</small></div><div class="j">${sak.grunn}</div>

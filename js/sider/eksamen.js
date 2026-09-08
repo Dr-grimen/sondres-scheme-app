@@ -20,6 +20,18 @@ export function Eksamen() {
   const genom = e.genom || [];
   return html`
     <${Fase} nr=4 namn=${`Eksamen · ${fmt(e.n_provde)} genom · ${prover.length} prøver · ${fmt(e.n_bestaatt)} bestått`} raud=${e.n_bestaatt === 0} />
+    ${(e.ekte_walk && e.ekte_walk.n_vindauge) ? html`<section class="kort"><h2>Ekte walk-forward <small>avl inne i kvart vindauge · den einaste testen av heile framgangsmåten</small></h2>
+      <div class="flis-rad">
+        <${Flis} tekst=${fmt(e.ekte_walk.sharpe, 2)} l="Sharpe, alt ut-av-utval" kl=${e.ekte_walk.sharpe > 0 ? 'gron' : 'raud'} />
+        <${Flis} tekst=${pst(e.ekte_walk.avkastning, 1)} l=${`samla over ${fmt(e.ekte_walk.dagar)} dagar`} />
+        <${Flis} tekst=${`${fmt(100 * e.ekte_walk.andel_positive_vindauge, 0)} %`} l=${`av ${e.ekte_walk.n_vindauge} vindauge i pluss`} />
+        <${Flis} tekst=${pst(-e.ekte_walk.maks_drawdown, 1)} l="største fall" kl="raud" />
+      </div>
+      <p class="stille" style="margin-top:8px">${e.ekte_walk.merknad}</p>
+      <div class="scroll"><table><thead><tr><th>Vindauge</th><th>Frå</th><th>Til</th><th class="r">Strategiar</th><th class="r">Avkastning</th></tr></thead><tbody>
+        ${(e.ekte_walk.vindauge || []).slice(-12).map((v) => html`<tr><td>${v.nr}</td><td>${v.frå}</td><td>${v.til}</td><td class="r">${v.n_strategiar}</td><td class="r ${v.avkastning > 0 ? 'opp' : 'ned'}">${pst(v.avkastning, 1)}</td></tr>`)}
+      </tbody></table></div>
+    </section>` : null}
     ${(e.portefolje && (e.portefolje.medlemmer || []).length) ? html`<section class="kort"><h2>Porteføljeeksamen <small>fleire ukorrelerte kantar prøvde som éin</small></h2>
       <div class="flis-rad">
         <${Flis} v=${e.portefolje.medlemmer.length} l="medlemmer" />

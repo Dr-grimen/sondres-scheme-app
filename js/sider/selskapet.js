@@ -20,7 +20,8 @@ export function Selskapet({ tilstand }) {
   const moete = (sel && sel.moete) || {}; const natt = (sel && sel.nattforslag) || {}; const minne = (sel && sel.minne) || {}; const post = (sel && sel.post) || [];
   const oppdrag = leiar.oppdrag || {}; const mandat = leiar.mandat || {};
   return html`
-    <div class="fase">>>> SELSKAPET // ${agentar.length} ROLLEAGENTAR · ${tankar.length} TANKAR I DAG</div>
+    <div class="fase">>>> SELSKAPET // ${agentar.length} FASTE AGENTAR · ${Object.keys(per).length} PÅ JOBB I DAG · ${tankar.length} TANKAR</div>
+    <p class="stille" style="margin:-6px 0 10px">Ingen agent blir sletta. Har han ikkje tankar i dag, ventar han på vakta si. Minnet hans står uansett.</p>
     ${valg.ceo ? html`<section class="kort"><h2>Styringa <small>CEO + storting på ${(valg.storting || []).length} · ${valg.grunnlag}</small></h2>
       <div class="flis-rad">
         <${Flis} tekst=${P(valg.ceo)} l="CEO · ${(valg.stemmevekt || {})[valg.ceo] || 8} stemmer" kl="gron" />
@@ -59,7 +60,7 @@ export function Selskapet({ tilstand }) {
         <div class="agent ${aktiv ? 'aktiv' : ''} ${vald === a.namn ? 'aktiv' : ''}" onClick=${() => setVald(vald === a.namn ? null : a.namn)} style="cursor:pointer">
           <div class="n"><span>${P(a.namn)} · ${a.tittel}</span><small>${a.region.toUpperCase()}</small></div>
           <div class="j">${a.jobb}</div>
-          <div class="s">${a.tidsplan}</div>
+          <div class="s">${a.tidsplan}${(per[a.namn] || []).length ? '' : ' · ventar på vakt'}</div>
           <div class="s">${sist ? `${mine.length} tankar i dag · sist ${alderTekst(sist.ts)}` : 'ingen tankar i dag enno'}</div>
           ${minne[a.namn] ? html`<div class="s">${fmt(minne[a.namn].koeyringar)} køyringar · ${Object.keys(minne[a.namn].laerdom || {}).length} lærdomar${minne[a.namn].oppdrag ? ` · oppdrag: ${minne[a.namn].oppdrag.kva}` : ''}</div>` : null}
           ${vald === a.namn && minne[a.namn] && Object.keys(minne[a.namn].laerdom || {}).length ? html`<div class="logg" style="margin-top:6px">${Object.entries(minne[a.namn].laerdom).map(([k, v]) => html`<div class="rad"><span class="ts">${v.n}×</span><span><b>${k}</b>: ${typeof v.verdi === 'object' ? JSON.stringify(v.verdi) : String(v.verdi)}</span></div>`)}</div>` : null}

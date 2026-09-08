@@ -32,6 +32,19 @@ export function Kunnskap() {
       </tbody></table></div>` : html`<${Tom} tekst="ingen nye artiklar i dag" />`}
       ${fo.oppsummering ? html`<p style="margin:12px 0 0;color:var(--tekst2);white-space:pre-wrap">${fo.oppsummering}</p>` : null}
     </section>
+    <section class="kort"><h2>Hendingskalender <small>Kalendervakta · kva dagar informasjonen kjem utanfrå</small></h2>
+      ${(k.kalender || {}).komande ? html`<p class="stille">${fmt(k.kalender.n_dagar)} dagar i kalenderen. Kategoriar: ${(k.kalender.kategoriar || []).join(', ')}. Berre datoar og namn blir lagra, aldri tala.</p>
+        <div class="scroll"><table><thead><tr><th>Dag</th><th>Kategoriar</th><th>Resultat</th></tr></thead><tbody>
+          ${k.kalender.komande.map((d) => html`<tr><td>${d.dag}</td><td>${(d.kategoriar || []).map((c) => html`<span class="merk ${c === 'fomc' || c === 'cpi' ? 'gul' : ''}">${c.toUpperCase()}</span> `)}</td><td>${(d.resultat || []).join(', ') || '–'}</td></tr>`)}
+        </tbody></table></div>` : html`<${Tom} tekst="Kalendervakta har ikkje køyrt enno" />`}
+    </section>
+    <section class="kort"><h2>Lese på nettet <small>Nettlesaren · opne kjelder · ${(k.nett || {}).dato || 'ikkje køyrt enno'}</small></h2>
+      ${(k.nett || {}).lest ? html`<p class="stille">${k.nett.n_lest} oppslag, ${k.nett.n_reglar} setningar som liknar handelsreglar. Emna blir valde av det systemet manglar.</p>
+        ${k.nett.lest.map((r) => html`<div class="agent"><div class="n"><span><a href=${r.lenkje} target="_blank" rel="noreferrer">${r.tittel}</a></span><small>${r.familie.toUpperCase()}</small></div>
+          ${(r.reglar || []).length ? html`<div class="j">${r.reglar[0]}</div>` : null}
+          ${(r.omgrep || []).length ? html`<div class="s">omgrep: ${r.omgrep.join(', ')}</div>` : null}</div>`)}`
+        : html`<${Tom} tekst="Nettlesaren har ikkje køyrt enno" />`}
+    </section>
     <section class="kort"><h2>Korrelasjonar og mønster <small>Mønstervakta · ekte tal med n og t-verdi · ${(k.korrelasjon || {}).dato || 'ikkje køyrt enno'}</small></h2>
       ${k.korrelasjon ? html`
         <p class="stille">${fmt(k.korrelasjon.n_testar)} testar. Bonferroni-tak for t: ${k.korrelasjon.bonferroni_t}. Under taket = kan vere slump.</p>

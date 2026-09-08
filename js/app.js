@@ -10,6 +10,9 @@ import { Provebane } from './sider/provebane.js';
 import { Avl } from './sider/avl.js';
 import { Eksamen } from './sider/eksamen.js';
 import { Stresslab } from './sider/stresslab.js';
+import { Skann } from './sider/skann.js';
+import { Nivaa } from './sider/nivaa.js';
+import { Varslar as Varsel } from './sider/varsel.js';
 import { Kunnskap } from './sider/kunnskap.js';
 import { Meklarar } from './sider/meklarar.js';
 import { Uttak } from './sider/uttak.js';
@@ -19,7 +22,7 @@ import { Papir } from './sider/papir.js';
 import { Sanning } from './sider/sanning.js';
 import { Innlogging } from './sider/innlogging.js';
 
-const SIDEKOMP = { oversikt: Oversikt, hjernen: Hjernen, provebane: Provebane, avl: Avl, eksamen: Eksamen, stresslab: Stresslab, kunnskap: Kunnskap, meklarar: Meklarar, uttak: Uttak, rapportar: Rapportar, selskapet: Selskapet, turnering: Turnering, papir: Papir, sanning: Sanning };
+const SIDEKOMP = { oversikt: Oversikt, skann: Skann, nivaa: Nivaa, varsel: Varsel, hjernen: Hjernen, provebane: Provebane, avl: Avl, eksamen: Eksamen, stresslab: Stresslab, kunnskap: Kunnskap, meklarar: Meklarar, uttak: Uttak, rapportar: Rapportar, selskapet: Selskapet, turnering: Turnering, papir: Papir, sanning: Sanning };
 
 function rute() {
   const h = (location.hash || '#/oversikt').replace(/^#\/?/, '');
@@ -28,9 +31,10 @@ function rute() {
 }
 
 function aktiveAgentar(tankar) {
+  // Kor mange av agentane som har jobba i DAG. (Før talde vi berre siste to timar, og då såg det ut som
+  // om agentar forsvann mellom vaktene. Ingen forsvinn; dei ventar.)
   if (!tankar || !tankar.tankar) return 0;
-  const grense = Date.now() - 2 * 3600 * 1000;
-  return new Set(tankar.tankar.filter((t) => new Date(t.ts).getTime() > grense).map((t) => t.agent)).size;
+  return new Set(tankar.tankar.map((t) => t.agent)).size;
 }
 
 function App() {
@@ -65,7 +69,7 @@ function App() {
   return html`
     <${Nav} side=${r.side} />
     <main class="ramme">
-      <${Topp} tilstand=${tilstand} tittel=${tittel} aktive=${aktiveAgentar(tankar)} />
+      <${Topp} tilstand=${tilstand} tittel=${tittel} aktive=${aktiveAgentar(tankar)} totalt=${((tilstand || {}).agentar || []).length} />
       ${tilstand && tilstand.kill_switch ? html`<div class="varsel">KILL-SWITCH UTLØYST: alt er flata. Må nullstillast manuelt i state.json.</div>` : null}
       ${tilstand && tilstand.modus === 'EKTE' ? html`<div class="varsel">EKTE PENGAR. Begge låsane er opne.</div>` : null}
       ${feil ? html`<div class="varsel">Kunne ikkje lese data: ${feil}</div>` : null}

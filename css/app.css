@@ -154,6 +154,10 @@ nav.nav .logo { display: none; } @media (min-width: 900px) { nav.nav .logo { dis
 .innlogg input { width: 100%; font: 16px var(--mono); padding: 12px; border-radius: 8px; border: 1px solid var(--kant); background: var(--flate2); color: var(--tekst); margin: 12px 0; }
 .knapp { background: var(--cyan); color: #000; border: 0; border-radius: 8px; padding: 12px 16px; font: 700 13px/1 var(--mono); letter-spacing: .08em; cursor: pointer; }
 .knapp.sekundaer { background: transparent; color: var(--tekst2); border: 1px solid var(--kant); }
+/* Små val-knappar inne på ei side (t.d. eigedel eller gruppe). */
+.kort .knapp { background: transparent; color: var(--tekst2); border: 1px solid var(--kant); padding: 7px 11px; font-size: 11px; margin: 0 6px 6px 0; }
+.kort .knapp.aktiv { background: var(--cyan); color: #000; border-color: var(--cyan); }
+.kort .knapp:hover { border-color: var(--cyan); }
 .feil { color: var(--raud2); font-size: 13px; }
 .varsel { background: rgba(239, 68, 68, .12); border: 1px solid rgba(239, 68, 68, .5); color: #ffd0d0; border-radius: 12px; padding: 12px 14px; margin: 10px 0; font-weight: 600; }
 .stille { color: var(--dempa); font-size: 12px; }

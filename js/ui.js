@@ -13,6 +13,9 @@ export const SIDER = [
   { id: 'avl', namn: 'Avl', ik: '⌇' },
   { id: 'eksamen', namn: 'Eksamen', ik: '✓' },
   { id: 'stresslab', namn: 'Stresslab', ik: '⚡' },
+  { id: 'skann', namn: 'Skann', ik: '⌖' },
+  { id: 'nivaa', namn: 'Nivå', ik: '≡' },
+  { id: 'varsel', namn: 'Varsel', ik: '!' },
   { id: 'kunnskap', namn: 'Kunnskap', ik: '📚' },
   { id: 'meklarar', namn: 'Meklarar', ik: '⇄' },
   { id: 'uttak', namn: 'Uttak', ik: '⇣' },
@@ -114,12 +117,13 @@ export function Kurve({ punkt, farge = 'var(--cyan)', h = 120, basis = null, tit
   </svg></div>`;
 }
 
-export function Topp({ tilstand, tittel, aktive = 0 }) {
+export function Topp({ tilstand, tittel, aktive = 0, totalt = 0 }) {
   const m = (tilstand && tilstand.modus) || 'PAPIR';
   return html`<header class="topp">
     <h1>Sondres scheme <small>${tittel}</small></h1>
     <span class="modus modus-${m}">${m}</span>
-    <span class="live ${aktive ? '' : 'stille'}"><span class="prikk"></span> ${aktive ? `LIVE · ${aktive} agentar aktive` : 'STILLE · ventar på neste køyring'}</span>
+    <span class="live ${aktive ? '' : 'stille'}" title="Alle agentane er faste og forsvinn aldri. Talet viser kor mange som har jobba i dag; resten ventar på si neste vakt.">
+      <span class="prikk"></span> ${aktive ? `LIVE · ${aktive}${totalt ? ` av ${totalt}` : ''} agentar har jobba i dag` : 'STILLE · ventar på neste køyring'}</span>
   </header>`;
 }
 

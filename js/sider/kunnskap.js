@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { html, Fase, Flis, Tom, fmt, dato, alderTekst } from '../ui.js';
 import { last } from '../data.js';
 
-const NAMN = { QQQ: 'Nasdaq', SPY: 'S&P 500', NVDA: 'Nvidia', 'GC=F': 'Gull', 'BZ=F': 'Brent', 'EURUSD=X': 'EUR/USD', BTCUSDT: 'Bitcoin', ETHUSDT: 'Ethereum' };
+const NAMN = { QQQ: 'Nasdaq', SPY: 'S&P 500', NVDA: 'Nvidia', 'GC=F': 'Gull', 'BZ=F': 'Brent', 'EURUSD=X': 'EUR/USD', EURUSDT: 'EUR/USD', BTCUSDT: 'Bitcoin', ETHUSDT: 'Ethereum' };
 
 /* Kunnskap: kva systemet las i dag, kva det trur marknaden er i (regime), og kva forsking og bøker gav av idear. */
 export function Kunnskap() {
@@ -31,6 +31,17 @@ export function Kunnskap() {
         ${fo.artiklar.slice(0, 20).map((a) => html`<tr><td class="status"><a href=${a.lenkje} target="_blank" rel="noopener">${a.tittel}</a></td><td class="mono stille">${a.dato}</td><td class="status">${Object.keys(a.idear || {}).length ? Object.keys(a.idear).map((p) => html`<span class="merk ok" style="margin:1px">${p}</span>`) : html`<span class="stille">ingen direkte</span>`}</td></tr>`)}
       </tbody></table></div>` : html`<${Tom} tekst="ingen nye artiklar i dag" />`}
       ${fo.oppsummering ? html`<p style="margin:12px 0 0;color:var(--tekst2);white-space:pre-wrap">${fo.oppsummering}</p>` : null}
+    </section>
+    <section class="kort"><h2>Korrelasjonar og mønster <small>Mønstervakta · ekte tal med n og t-verdi · ${(k.korrelasjon || {}).dato || 'ikkje køyrt enno'}</small></h2>
+      ${k.korrelasjon ? html`
+        <p class="stille">${fmt(k.korrelasjon.n_testar)} testar. Bonferroni-tak for t: ${k.korrelasjon.bonferroni_t}. Under taket = kan vere slump.</p>
+        <div class="scroll"><table><thead><tr><th>Leiar → følgjar</th><th>Intervall</th><th class="r">Korr no</th><th class="r">Median</th><th class="r">Beste lagg</th><th class="r">r</th><th class="r">t</th><th class="r">n</th></tr></thead><tbody>
+          ${(k.korrelasjon.par || []).map((p) => { const b = p.beste_lagg || {}; const r = p.rullande || {}; const sterk = Math.abs(b.t || 0) > k.korrelasjon.bonferroni_t && (b.lagg || 0) > 0; return html`<tr class=${sterk ? 'fremja' : ''}><td>${NAMN[p.leiar] || p.leiar} → ${NAMN[p.folgjar] || p.folgjar}</td><td>${p.intervall}</td><td class="r">${r.no == null ? '–' : r.no}</td><td class="r">${r.median == null ? '–' : r.median}</td><td class="r">${b.lagg == null ? '–' : b.lagg}</td><td class="r">${b.r == null ? '–' : b.r}</td><td class="r ${sterk ? 'opp' : ''}">${b.t == null ? '–' : b.t}</td><td class="r">${fmt(b.n)}</td></tr>`; })}
+        </tbody></table></div>
+        ${(k.korrelasjon.sterke || []).length || (k.korrelasjon.tider || []).length ? html`<div class="logg" style="margin-top:8px">${[...(k.korrelasjon.sterke || []), ...(k.korrelasjon.tider || [])].map((s) => html`<div class="rad"><span>${s}</span></div>`)}</div>` : html`<p class="stille">Ingen mønster eller tidsbøtter over Bonferroni-taket. Det er eit resultat.</p>`}
+        <details style="margin-top:8px"><summary>Mønster per eigedel (topp 5 etter |t|)</summary>
+          ${Object.entries(k.korrelasjon.monster_topp || {}).map(([n, rader]) => html`<div class="stille" style="margin-top:6px"><b>${n}</b>: ${rader.map((r) => `${r.primitiv} n=${r.n} ${r.snitt_bps > 0 ? '+' : ''}${r.snitt_bps} bps (basis ${r.basis_bps}) t=${r.t_mot_basis}`).join(' · ')}</div>`)}
+        </details>` : html`<${Tom} tekst="Mønstervakta har ikkje køyrt enno (05:00 UTC)" />`}
     </section>
     <section class="kort"><h2>Bøker <small>legg eigne, lovlege PDF-ar i ~/sondres-scheme/kunnskap/</small></h2>
       ${(bo.lesne || []).length ? bo.lesne.map((b) => html`<div class="agent"><div class="n"><span>${b.fil}</span><small>${fmt(b.ord)} ORD</small></div><div class="j">${b.samandrag || 'ingen modell-samandrag (' + (b.samandrag_kjelde || '') + ')'}</div><div class="s">idear: ${Object.keys(b.idear || {}).join(', ') || 'ingen'} · ${(b.reglar || []).length} regelsetningar</div></div>`) : html`<${Tom} tekst=${bo.merknad || 'ingen bøker enno'} />`}

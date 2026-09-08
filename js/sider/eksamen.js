@@ -31,6 +31,11 @@ export function Eksamen() {
       <div class="scroll"><table><thead><tr><th>Eigedel</th><th>Genom</th><th class="r">Sharpe</th><th class="r">Vekt</th><th>Regel</th></tr></thead><tbody>
         ${e.portefolje.medlemmer.map((m) => html`<tr><td>${m.eigedel}</td><td class="mono">${m.id}</td><td class="r">${fmt(m.sharpe, 2)}</td><td class="r">${fmt(100 * m.vekt, 0)} %</td><td class="status">${(m.skildring || '').slice(0, 90)}</td></tr>`)}
       </tbody></table></div>
+      ${(e.portefolje.walk_forward || {}).n_vindauge ? html`<div class="agent" style="margin-top:8px">
+        <div class="n"><span>Walk-forward over ${e.portefolje.walk_forward.n_vindauge} vindauge</span><small>${fmt(e.portefolje.walk_forward.dagar)} dagar</small></div>
+        <div class="j">Sharpe ${fmt(e.portefolje.walk_forward.sharpe, 2)} · ${fmt(100 * e.portefolje.walk_forward.andel_positive_vindauge, 0)} % av vindauga i pluss · største fall ${fmt(100 * e.portefolje.walk_forward.maks_drawdown, 1)} %</div>
+        <div class="s">${e.portefolje.walk_forward.merknad}</div>
+      </div>` : null}
       <table style="margin-top:8px"><tbody>${(e.portefolje.dommar || []).map((d) => html`<tr><td style=${`color:${d.bestaatt ? 'var(--gron)' : 'var(--raud2)'}`}>${d.bestaatt ? '●' : '○'} ${d.namn}</td><td class="r mono">${d.verdi == null ? '–' : fmt(d.verdi, 3)}</td><td class="r mono stille">krav ${fmt(d.terskel, 2)}</td><td class="status">${d.forklaring}</td></tr>`)}</tbody></table>
     </section>` : null}
     <section class="kort"><h2>Resultat <small>${dato(e.ts)} · kampanje ${e.kampanje}</small></h2>

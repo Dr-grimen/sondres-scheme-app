@@ -15,10 +15,26 @@ export function Selskapet({ tilstand }) {
   for (const x of tankar) (per[x.agent] = per[x.agent] || []).push(x);
   const grense = Date.now() - 2 * 3600 * 1000;
   const vis = vald ? tankar.filter((x) => x.agent === vald) : tankar;
-  const leiar = (sel && sel.leiar) || {}; const minne = (sel && sel.minne) || {}; const post = (sel && sel.post) || [];
+  const leiar = (sel && sel.leiar) || {}; const valg = (sel && sel.val) || {}; const sting = (sel && sel.storting) || {}; const minne = (sel && sel.minne) || {}; const post = (sel && sel.post) || [];
   const oppdrag = leiar.oppdrag || {}; const mandat = leiar.mandat || {};
   return html`
     <div class="fase">>>> SELSKAPET // ${agentar.length} ROLLEAGENTAR · ${tankar.length} TANKAR I DAG</div>
+    ${valg.ceo ? html`<section class="kort"><h2>Styringa <small>CEO + storting på ${(valg.storting || []).length} · ${valg.grunnlag}</small></h2>
+      <div class="flis-rad">
+        <${Flis} tekst=${valg.ceo} l="CEO · ${(valg.stemmevekt || {})[valg.ceo] || 8} stemmer" kl="gron" />
+        <${Flis} v=${(valg.storting || []).length} l="i stortinget · 1 stemme kvar" />
+        <${Flis} v=${(valg.arbeidarar || []).length} l="arbeidarar" />
+        <${Flis} v=${valg.fleirtal} l="stemmer trengst for fleirtal" />
+      </div>
+      <p class="stille">${(valg.nye || []).length ? `${(valg.nye || []).length} nye er arbeidarar til dei har bevist seg: ${(valg.nye || []).slice(0, 6).join(', ')}` : 'alle har bevist seg'}</p>
+      <div class="scroll"><table><thead><tr><th>Plass</th><th>Agent</th><th>Rolle</th><th class="r">Avkastning</th><th class="r">Poeng</th><th class="r">Funn</th><th class="r">Løn</th></tr></thead><tbody>
+        ${(valg.rangering || []).map((r) => html`<tr class=${r.agent === valg.ceo ? 'fremja' : ''}><td class="r">${r.plass}</td><td>${r.agent}</td><td><span class="merk ${(valg.roller || {})[r.agent] === 'ceo' ? 'gron' : ((valg.roller || {})[r.agent] === 'storting' ? 'ok' : '')}">${((valg.roller || {})[r.agent] || '').toUpperCase()}</span></td><td class="r ${r.pnl > 0 ? 'opp' : (r.pnl < 0 ? 'ned' : '')}">${r.pnl == null ? 'ikkje måleleg' : fmt(r.pnl, 2)}</td><td class="r">${fmt(r.poeng, 1)}</td><td class="r">${fmt(r.hendingar)}</td><td class="r">${fmt((valg.loen || {})[r.agent])}</td></tr>`)}
+      </tbody></table></div>
+    </section>` : null}
+    ${(sting.saker || []).length ? html`<section class="kort"><h2>Voteringar <small>CEO har ${(valg.stemmevekt || {})[valg.ceo] || 8} stemmer · fleirtal ${sting.fleirtal} av ${sting.stemmer_totalt}</small></h2>
+      ${sting.saker.map((sak) => html`<div class="agent"><div class="n"><span>${sak.tekst}</span><small class="${sak.vedteke ? 'gron' : 'raud'}">${sak.vedteke ? 'VEDTEKE' : 'FALT'} ${sak.ja}–${sak.nei}</small></div><div class="j">${sak.grunn}</div>
+        <div class="s">${(sak.stemmer || []).map((st) => `${st.agent}${st.vekt > 1 ? ' ×' + st.vekt : ''}: ${st.ja ? 'ja' : 'nei'}`).join(' · ')}</div></div>`)}
+    </section>` : null}
     <section class="kort"><h2>Sjefen <small>mandat: høgast mogleg dagleg avkastning · ${leiar.dag || 'ingen oppdrag enno'}</small></h2>
       ${mandat.ok === true ? html`<p class="stille">Systemet køyrer så aggressivt som ordren tillèt: gearing 20× på nivå 3, full Kelly, dagsstopp 15 %, kill-switch 50 %.</p>` : null}
       ${(mandat.avvik || []).length ? html`<div class="logg">${mandat.avvik.map((a) => html`<div class="rad"><span class="hend">TAMMARE ENN ORDREN</span><span>${a.innstilling}: står på ${a.no}, ordren seier ${a.venta}</span></div>`)}</div>` : null}

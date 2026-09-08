@@ -15,7 +15,7 @@ function Tabell({ rader, kva }) {
   const m = MAAL[kva];
   if (!rader || !rader.length) return html`<${Tom} tekst="ingen data" />`;
   return html`<div class="scroll"><table><thead><tr><th>Symbol</th><th>Namn</th><th class="r">${m.tittel}</th><th class="r">Pris</th><th class="r">I dag</th></tr></thead><tbody>
-    ${rader.map((r) => html`<tr><td class="mono">${r.symbol}${r.ufullstendig ? html` <span class="merk gul" title="dagsbaren er ikkje ferdig">*</span>` : null}</td>
+    ${rader.map((r) => html`<tr><td class="mono">${r.symbol}${r.ufullstendig ? html` <span class="merk gul" title="dagens bar var uferdig; tala er frå siste heile dag">*</span>` : null}</td>
       <td>${(r.namn || '').slice(0, 22)} <span class="merk ${r.gruppe === 'krypto' ? 'gul' : ''}">${(r.gruppe || '').toUpperCase()}</span></td>
       <td class="r ${Math.abs(r[m.felt] || 0) > 2 ? 'opp' : ''}">${r[m.felt] == null ? '–' : (r[m.felt] > 0 && kva === 'avstand_sma' ? '+' : '') + fmt(r[m.felt], 2)}${m.eining}</td>
       <td class="r">${fmt(r.pris, r.pris > 100 ? 2 : 4)}</td>
@@ -38,7 +38,7 @@ export function Skann() {
         <${Flis} v=${d.n_aksjar} l="aksjar (Nasdaq-100)" />
         <${Flis} v=${d.n_krypto} l="kryptopar" />
         <${Flis} v=${d.n_hoppa_over} l="utan nok data" />
-        <${Flis} v=${(d.ufullstendig || []).length} l="uferdig dagsbar" />
+        <${Flis} v=${(d.ufullstendig || []).length} l="rekna på siste heile dag" />
       </div>
       <div style="margin-top:10px">${['alle', 'aksjar', 'krypto'].map((g) => html`<button class=${'knapp' + (gruppe === g ? ' aktiv' : '')} onClick=${() => setGruppe(g)}>${g.toUpperCase()}</button> `)}</div>
     </section>
@@ -55,6 +55,6 @@ export function Skann() {
             <td class="r ${r.avk_dag > 0 ? 'opp' : 'ned'}">${r.avk_dag == null ? '–' : pst(r.avk_dag, 1)}</td></tr>`)}
         </tbody></table></div>
       </details>
-      <p class="stille" style="margin-top:8px">* dagsbaren er ikkje ferdig; tala er rekna på det som finst så langt i dag. Sist henta ${dato(d.ts)}.</p>
+      <p class="stille" style="margin-top:8px">* dagens bar var uferdig då skannen køyrde, så tala er rekna på den siste heile dagen. Sist henta ${dato(d.ts)}.</p>
     </section>`;
 }

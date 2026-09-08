@@ -69,6 +69,8 @@ export class Hjerne3D {
       else if (n.type === 'kandidat') { if (st === 'fremja') { c = new THREE.Color('#34d399'); s = 2.4; } else if (st === 'observasjon') { c = new THREE.Color('#f5b731'); s = 2.0; } else if (st === 'død') { c = new THREE.Color('#5a1e26'); s = 1.0; } else { c = new THREE.Color('#4b5563'); s = 1.1; } }
       else if (n.type === 'instrument' || n.type === 'kjelde' || n.type === 'modell' || n.type === 'bok') s = 2.6;
       else if (n.type === 'meklar') { s = 2.2; if (!(n.data || {}).har_nokkel) c = c.clone().multiplyScalar(0.45); }
+      // Lærdom er eit nevron: jo fleire gonger agenten har sett det same, jo større og lysare.
+      else if (n.type === 'laerdom') { const g = Math.min(6, (n.data || {}).n || 1); c = new THREE.Color('#e879f9').lerp(new THREE.Color('#ffffff'), 0.12 * g); s = 1.4 + 0.35 * g; }
       farge[i * 3] = c.r; farge[i * 3 + 1] = c.g; farge[i * 3 + 2] = c.b; size[i] = s; idx.set(n.id, i);
     });
     const g = new THREE.BufferGeometry();
@@ -82,7 +84,7 @@ export class Hjerne3D {
       const a = idx.get(k.fra), b = idx.get(k.til);
       lp.set([pos[a * 3], pos[a * 3 + 1], pos[a * 3 + 2], pos[b * 3], pos[b * 3 + 1], pos[b * 3 + 2]], i * 6);
       const styrke = 0.18 + 0.5 * Math.min(1, k.vekt || 0.3);
-      const c = k.type === 'laert' ? new THREE.Color('#e879f9') : (k.type === 'avgjerd' ? new THREE.Color('#f43f5e') : (k.type === 'dom' ? new THREE.Color('#34d399') : new THREE.Color('#22d3ee')));
+      const c = (k.type === 'laert' || k.type === 'laering') ? new THREE.Color('#e879f9') : (k.type === 'samtale' ? new THREE.Color('#a78bfa') : (k.type === 'avgjerd' ? new THREE.Color('#f43f5e') : (k.type === 'dom' ? new THREE.Color('#34d399') : new THREE.Color('#22d3ee'))));
       lc.set([c.r * styrke, c.g * styrke, c.b * styrke, farge[b * 3] * styrke, farge[b * 3 + 1] * styrke, farge[b * 3 + 2] * styrke], i * 6);
     });
     const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(lp, 3)); lg.setAttribute('color', new THREE.BufferAttribute(lc, 3));

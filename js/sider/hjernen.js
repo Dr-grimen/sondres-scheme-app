@@ -71,6 +71,9 @@ export function Hjernen() {
         ${vald.data && Array.isArray(vald.data.grunnar) && vald.data.grunnar.length ? html`<div class="type">dom</div><ul class="stille" style="margin:4px 0 8px;padding-left:16px">${vald.data.grunnar.map((g) => html`<li>${g}</li>`)}</ul>` : null}
         ${vald.data && vald.data.params && Object.keys(vald.data.params).length ? html`<div class="type">parametrar</div><div class="mono stille" style="margin:4px 0 8px">${JSON.stringify(vald.data.params)}</div>` : null}
         <div class="type">kjelder</div><div class="mono stille" style="margin:4px 0 8px;font-size:11px">${(vald.kjelder || []).join(' · ')}</div>
+        ${vald.type === 'laerdom' ? html`<div class="type">lærdom · sett ${(vald.data || {}).n || 1} gonger</div>
+          <div class="verdi">${String((vald.data || {}).verdi ?? '')}</div>
+          <div class="stille">${(vald.data || {}).person || (vald.data || {}).agent} lærte dette${(vald.data || {}).kjelde ? ` frå ${(vald.data || {}).kjelde}` : ''}. Nevronet veks kvar gong det same blir målt på nytt.</div>` : null}
         ${vald.type === 'agent' ? html`<div class="type">tankar i dag (${nodeTankar.length})</div>
           ${nodeTankar.length ? [...nodeTankar].reverse().slice(0, 30).map((t) => html`<div class="tanke"><div class="ts">${klokke(t.ts)}${t.hending ? html` · <span class="a">${t.hending}</span>` : null}</div><div><b>${t.inn}</b> — ${t.resonnement}</div><div class="stille">${t.avgjerd}</div></div>`) : html`<p class="stille">ingen tankar i dag enno</p>`}` : null}
       </div>` : null}

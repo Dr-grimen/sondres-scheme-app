@@ -4,7 +4,7 @@ import { lastAlle } from '../data.js';
 
 export function Oversikt({ tilstand }) {
   const [d, setD] = useState(null);
-  useEffect(() => { lastAlle(['papir', 'hendingar', 'tankar']).then(setD); }, []);
+  useEffect(() => { lastAlle(['papir', 'hendingar', 'tankar', 'skann', 'nivaa', 'selskap']).then(setD); }, []);
   if (!tilstand) return html`<${Tom} tekst="ingen tilstand enno – pipelinen har ikkje køyrt" />`;
   const p = tilstand.papir || {};
   const t = tilstand.turnering || {};
@@ -17,9 +17,37 @@ export function Oversikt({ tilstand }) {
   const hend = d && d.hendingar ? d.hendingar.hendingar : [];
   const tankar = d && d.tankar ? d.tankar.tankar : [];
 
+  const sk = (d && d.skann) || {};
+  const niv = (d && d.nivaa) || {};
+  const sel = (d && d.selskap) || {};
+  const natt = sel.nattforslag || {};
+  const moete = sel.moete || {};
+  const valg = sel.val || {};
+  const pn = sel.personnamn || {};
+  const toppVolum = ((sk.topp || {}).volum || []).slice(0, 3);
+  const naer = Object.values(niv.eigedelar || {})
+    .map((e) => ({ namn: e.namn || e.symbol, a: e.analyse || {} }))
+    .filter((x) => x.a.naermaste && x.a.naermaste.avstand_pct != null)
+    .sort((x, y) => Math.abs(x.a.naermaste.avstand_pct) - Math.abs(y.a.naermaste.avstand_pct))
+    .slice(0, 3);
+
   return html`
     <${Fasestripe} aktiv=${fase.aktiv} />
     <${Fase} nr=${fase.aktiv + 1} namn=${fase.namn} />
+
+    <section class="kort"><h2>Dette skjedde sist <small>skann, nivå og nattskift · alt frå filer i repoet</small></h2>
+      <div class="flis-rad">
+        <${Flis} v=${(sk.n_aksjar || 0) + (sk.n_krypto || 0)} l="symbol skanna" />
+        <${Flis} v=${Object.keys(niv.eigedelar || {}).length} l="eigedelar med soner" />
+        <${Flis} v=${natt.n || 0} l="nye strategiar i natt" />
+        <${Flis} tekst=${pn[valg.ceo] || valg.ceo || '–'} l="CEO" kl="gron" />
+      </div>
+      ${toppVolum.length ? html`<p class="stille" style="margin-top:10px"><b>Utliggjarar på volum:</b> ${toppVolum.map((r) => `${r.symbol} ${fmt(r.rvol, 1)}×`).join(' · ')}</p>` : null}
+      ${naer.length ? html`<div class="logg" style="margin-top:6px">${naer.map((x) => html`<div class="rad"><span class="agent">${x.namn}</span><span>${x.a.tekst_nn}</span></div>`)}</div>` : null}
+      ${(moete.innlegg || []).length ? html`<details style="margin-top:8px"><summary>Siste møte: ${moete.n} innlegg</summary>
+        <div class="logg">${moete.innlegg.slice(0, 8).map((i) => html`<div class="rad"><span class="agent">${i.namn}</span><span>${i.seier}</span></div>`)}</div></details>` : null}
+      ${(natt.genom || []).length ? html`<p class="stille">Nattskiftet bygde ${natt.n} genom på ${natt.eigedel} av det agentane har målt. Dei går gjennom eksamen som alt anna.</p>` : null}
+    </section>
 
     <section class="kort"><h2>Papirboka <small>leikepengar, aldri ekte utan låsane</small></h2>
       <div class="tal">

@@ -27,7 +27,24 @@
 <div id="app"><div class="lastar mono">&gt;&gt;&gt; SONDRES SCHEME // LASTAR …</div></div>
 <script type="module" src="js/app.js"></script>
 <script>
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
+/* Service worker med sjølvhelbreding. Utan dette kunne ein som alt hadde opna appen få servert
+   gammal kode i det uendelege: Sondre såg «12 av 36 agentar» medan data sa 35, fordi tala var
+   nye og koden gammal (9. sep 2026). No blir det leita etter ny versjon ved kvar opning, og
+   når ein ny service worker tek over, lastar sida seg om éin gong av seg sjølv. */
+if ('serviceWorker' in navigator) {
+  let lastarOm = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (lastarOm) return;                       // berre éin gong, aldri ei løkke
+    lastarOm = true;
+    location.reload();
+  });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      reg.update().catch(() => {});             // sjekk etter ny kode ved kvar opning
+      setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+    }).catch(() => {});
+  });
+}
 </script>
 </body>
 </html>

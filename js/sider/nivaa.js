@@ -53,9 +53,63 @@ function teikn(kanvas, e) {
   }
 }
 
+/* TradingView: gratis diagram-widget (ingen konto, ingen nøkkel). Vi kan ikkje teikne VÅRE soner
+   inne i deira diagram - det krev deira lisensierte charting-bibliotek - så sonene står i tabellen
+   under, og vårt eige lysdiagram er framleis standard. Widgeten treng nett; utan nett viser han
+   ingenting, og vårt eige diagram verkar likevel. */
+const TV_SYMBOL = {
+  QQQ: 'NASDAQ:QQQ', SPY: 'AMEX:SPY', NVDA: 'NASDAQ:NVDA',
+  'GC=F': 'COMEX:GC1!', 'BZ=F': 'TVC:UKOIL',
+  EURUSDT: 'FX:EURUSD', BTCUSDT: 'BINANCE:BTCUSDT', ETHUSDT: 'BINANCE:ETHUSDT',
+  TLT: 'NASDAQ:TLT', 'NG=F': 'NYMEX:NG1!', 'ZC=F': 'CBOT:ZC1!', 'SB=F': 'ICEUS:SB1!',
+};
+const TV_INTERVALL = { '1d': 'D', '1h': '60', '4h': '240', '15m': '15' };
+
+function tvLast() {
+  if (window.TradingView) return Promise.resolve(true);
+  if (!window.__tvLastar) {
+    window.__tvLastar = new Promise((ok) => {
+      const s = document.createElement('script');
+      s.src = 'https://s3.tradingview.com/tv.js';
+      s.onload = () => ok(true); s.onerror = () => ok(false);
+      document.head.appendChild(s);
+    });
+  }
+  return window.__tvLastar;
+}
+
+function TradingViewDiagram({ symbol, intervall }) {
+  const boks = useRef(null);
+  const [feil, setFeil] = useState(false);
+  const tv = TV_SYMBOL[symbol];
+  useEffect(() => {
+    let av = false;
+    if (!tv || !boks.current) return;
+    boks.current.innerHTML = '';
+    const id = 'tv-' + Math.random().toString(36).slice(2);
+    boks.current.id = id;
+    tvLast().then((ok) => {
+      if (av || !ok || !window.TradingView) { setFeil(true); return; }
+      try {
+        new window.TradingView.widget({
+          container_id: id, symbol: tv, interval: TV_INTERVALL[intervall] || 'D',
+          theme: 'dark', style: '1', locale: 'no', timezone: 'Europe/Oslo',
+          autosize: true, hide_side_toolbar: false, allow_symbol_change: false,
+          studies: ['STD;SMA', 'STD;Volume'],
+        });
+      } catch (e) { setFeil(true); }
+    });
+    return () => { av = true; };
+  }, [tv, intervall]);
+  if (!tv) return html`<${Tom} tekst=${`${symbol} har ingen kjend TradingView-kode enno`} />`;
+  if (feil) return html`<${Tom} tekst="fekk ikkje lasta TradingView (ingen nett, eller blokkert)" />`;
+  return html`<div ref=${boks} style="height:460px"></div>`;
+}
+
 export function Nivaa() {
   const [d, setD] = useState(undefined);
   const [vald, setVald] = useState(null);
+  const [tvPaa, setTvPaa] = useState(false);
   const kanvas = useRef(null);
   useEffect(() => { last('nivaa').then(setD); }, []);
   const eigedelar = (d && d.eigedelar) || {};
@@ -73,7 +127,12 @@ export function Nivaa() {
     <div class="fase">>>> SANSAR // STØTTE OG MOTSTAND</div>
     <section class="kort"><h2>${e.namn || e.symbol} <small>${e.intervall} · sist ${dato(d.ts)}</small></h2>
       <div style="margin-bottom:10px">${noklar.map((k) => html`<button class=${'knapp' + (k === n ? ' aktiv' : '')} onClick=${() => setVald(k)}>${(eigedelar[k].namn || k).slice(0, 16)}</button> `)}</div>
-      <canvas ref=${kanvas} style="width:100%;height:320px"></canvas>
+      <div style="margin-bottom:8px">
+        <button class=${'knapp' + (tvPaa ? '' : ' aktiv')} onClick=${() => setTvPaa(false)}>Våre soner</button>
+        <button class=${'knapp' + (tvPaa ? ' aktiv' : '')} onClick=${() => setTvPaa(true)}>TradingView</button>
+      </div>
+      ${tvPaa ? html`<${TradingViewDiagram} symbol=${e.symbol} intervall=${e.intervall} />`
+              : html`<canvas ref=${kanvas} style="width:100%;height:320px"></canvas>`}
       <p style="margin:10px 0 0"><b>${a.tekst_nn || 'ingen analyse'}</b></p>
       <p class="stille">Pris ${fmt(a.pris, 4)} · ATR ${fmt(a.atr, 4)} · trend mot SMA50: ${a.trend_sma50 || '–'}${a.siste_bar_ufullstendig ? ' · siste bar er ikkje ferdig' : ''}</p>
     </section>

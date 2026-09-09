@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { html, Fase, Flis, Tom, fmt, dato } from '../ui.js';
+import { html, Fase, Flis, Tom, fmt, pst, dato } from '../ui.js';
 import { last } from '../data.js';
 
 export const PROVE_NAMN = {

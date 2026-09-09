@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { html, Tom, fmt, klokke, alderTekst } from '../ui.js';
+import { html, Tom, Flis, fmt, dato, klokke, alderTekst } from '../ui.js';
 import { last } from '../data.js';
 
 /* Selskapet: rolleagentane (leiarane) og tankane deira i dag. Tusenvis av genom er arbeidarane;
@@ -19,9 +19,27 @@ export function Selskapet({ tilstand }) {
   const pn = (sel && sel.personnamn) || {}; const P = (a) => pn[a] || a;
   const moete = (sel && sel.moete) || {}; const natt = (sel && sel.nattforslag) || {}; const minne = (sel && sel.minne) || {}; const post = (sel && sel.post) || [];
   const oppdrag = leiar.oppdrag || {}; const mandat = leiar.mandat || {};
+  const ordre = leiar.ordre || {};
+  // Heile dagen, ikkje berre dei 500 siste tankane (som alle kjem frå dei nyaste vaktene).
+  const perAgent = (t && t.per_agent) || [];
+  const nPaaJobb = (t && t.n_agentar_i_dag != null) ? t.n_agentar_i_dag : Object.keys(per).length;
+  const nTankar = (t && t.n_tankar_i_dag != null) ? t.n_tankar_i_dag : tankar.length;
   return html`
-    <div class="fase">>>> SELSKAPET // ${agentar.length} FASTE AGENTAR · ${Object.keys(per).length} PÅ JOBB I DAG · ${tankar.length} TANKAR</div>
+    <div class="fase">>>> SELSKAPET // ${agentar.length} FASTE AGENTAR · ${nPaaJobb} PÅ JOBB I DAG · ${nTankar} TANKAR</div>
     <p class="stille" style="margin:-6px 0 10px">Ingen agent blir sletta. Har han ikkje tankar i dag, ventar han på vakta si. Minnet hans står uansett.</p>
+    ${ordre.tittel ? html`<section class="kort" style="border-color:rgba(52,211,153,.45)">
+      <h2>Ordren frå Sondre <small>kvar agent les denne fyrst, i kvar vakt · config.yaml</small></h2>
+      <p style="font-size:17px;font-weight:600;color:var(--gron);margin:0 0 8px">${ordre.tittel}</p>
+      <p style="white-space:pre-line;margin:0">${ordre.fraa_sondre}</p>
+      ${ordre.slik_gjeld_det ? html`<details style="margin-top:10px"><summary>Slik gjeld det i praksis</summary>
+        <p class="stille" style="white-space:pre-line">${ordre.slik_gjeld_det}</p></details>` : null}
+      ${ordre.grensa_som_står ? html`<p class="stille" style="white-space:pre-line;margin-top:8px">${ordre['grensa_som_står']}</p>` : null}
+    </section>` : null}
+    ${perAgent.length ? html`<section class="kort"><h2>Kven jobba i dag <small>heile dagen, ikkje eit utsnitt</small></h2>
+      <div class="scroll"><table><thead><tr><th>Agent</th><th class="r">Tankar</th><th>Fyrst</th><th>Sist</th><th>Siste avgjerd</th></tr></thead><tbody>
+        ${perAgent.map((r) => html`<tr><td>${P(r.agent)} <small class="stille">${r.agent}</small></td><td class="r">${fmt(r.n)}</td><td>${klokke(r.fyrste)}</td><td>${klokke(r.siste)}</td><td class="stille">${(r.sist_avgjerd || '').slice(0, 70)}</td></tr>`)}
+      </tbody></table></div>
+    </section>` : null}
     ${valg.ceo ? html`<section class="kort"><h2>Styringa <small>CEO + storting på ${(valg.storting || []).length} · ${valg.grunnlag}</small></h2>
       <div class="flis-rad">
         <${Flis} tekst=${P(valg.ceo)} l="CEO · ${(valg.stemmevekt || {})[valg.ceo] || 8} stemmer" kl="gron" />

@@ -31,9 +31,12 @@ function rute() {
 }
 
 function aktiveAgentar(tankar) {
-  // Kor mange av agentane som har jobba i DAG. (Før talde vi berre siste to timar, og då såg det ut som
-  // om agentar forsvann mellom vaktene. Ingen forsvinn; dei ventar.)
-  if (!tankar || !tankar.tankar) return 0;
+  // Kor mange av agentane som har jobba i DAG. Bruk per_agent, som tel heile dagen. Fell tilbake på
+  // tankelista berre om eksporten er gammal - den er avkorta til dei 500 siste og undertel difor grovt
+  // (viste 11 av 36 medan 35 hadde jobba; funnen 9. sep 2026).
+  if (!tankar) return 0;
+  if (tankar.n_agentar_i_dag != null) return tankar.n_agentar_i_dag;
+  if (!tankar.tankar) return 0;
   return new Set(tankar.tankar.map((t) => t.agent)).size;
 }
 

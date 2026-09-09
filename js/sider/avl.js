@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { html, Fase, Flis, Tom, fmt, pstRaa } from '../ui.js';
+import { html, Fase, Flis, Tom, fmt, pstRaa, dato } from '../ui.js';
 import { lastAlle } from '../data.js';
 
 const FARGAR = ['#22d3ee', '#a78bfa', '#f59e0b', '#34d399', '#e879f9', '#60a5fa', '#fb923c', '#f43f5e', '#67e8f9', '#c4b5fd'];

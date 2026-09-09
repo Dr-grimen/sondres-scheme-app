@@ -1,4 +1,4 @@
-import { html } from '../ui.js';
+import { html, dato } from '../ui.js';
 
 /* Uttak til Firi: alltid for hand. Appen guidar, flyttar aldri pengar. */
 const STEG = {

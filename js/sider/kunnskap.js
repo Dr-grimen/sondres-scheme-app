@@ -12,6 +12,7 @@ export function Kunnskap() {
   if (!k || (!k.nyheiter && !k.forsking && !k.boker)) return html`<div class="fase">>>> MINNE // KUNNSKAP</div><${Tom} tekst="kunnskapsløypa har ikkje køyrt enno (dagleg 05:00 UTC, eller python -m scheme.main kunnskap)" />`;
   const ny = k.nyheiter || {}; const fo = k.forsking || {}; const bo = k.boker || {}; const reg = ny.regime || {}; const llm = k.llm || {};
   const per = Object.entries(ny.per_instrument || {}).sort((a, b) => b[1].n - a[1].n);
+  const wm = ny.world_monitor || {};
   return html`
     <div class="fase">>>> MINNE // KUNNSKAP · ${fmt(ny.n_saker)} SAKER · ${fmt(fo.n_artiklar)} ARTIKLAR · ${fmt(bo.n_filer)} BØKER</div>
     <section class="kort"><h2>Regime no <small>skjult Markov-modell på avkastning og volatilitet · ${ny.dato || ''}</small></h2>
@@ -19,12 +20,21 @@ export function Kunnskap() {
         <div class="n"><span>${r.namn || NAMN[sym] || sym}</span><small style=${`color:${r.tilstand === 'uroleg' ? 'var(--raud2)' : 'var(--cyan)'}`}>${r.tilstand.toUpperCase()}</small></div>
         <div class="j">sannsyn ${fmt(100 * r.sannsyn)} % · ${r.dagar} dagar · årsvol roleg ${fmt(100 * r.vol_roleg)} % / uroleg ${fmt(100 * r.vol_uroleg)} %</div></div>`)}</div>` : html`<${Tom} />`}
     </section>
-    <section class="kort"><h2>Nyheiter i dag <small>${fmt(ny.n_kjelder)} kjelder · sentiment er ordteljing, ikkje sanning</small></h2>
+    <section class="kort"><h2>Nyheiter i dag <small>${fmt(ny.n_kjelder)} kjelder · ${fmt(ny.n_land_kjelder || 0)} land · sentiment er ordteljing, ikkje sanning</small></h2>
       ${per.length ? html`<div class="scroll"><table><thead><tr><th>Instrument</th><th class="r">Saker</th><th class="r">Stemning</th><th>Døme</th></tr></thead><tbody>
         ${per.map(([sym, v]) => html`<tr><td>${NAMN[sym] || sym}</td><td class="r">${v.n}</td><td class="r ${v.sentiment > 0.15 ? 'opp' : (v.sentiment < -0.15 ? 'ned' : '')}">${v.sentiment > 0 ? '+' : ''}${fmt(v.sentiment, 2)}</td><td class="status">${(v.topp || []).slice(0, 2).join(' · ')}</td></tr>`)}
       </tbody></table></div>` : html`<${Tom} />`}
       ${ny.oppsummering ? html`<p style="margin:12px 0 0;color:var(--tekst2)">${ny.oppsummering}</p><p class="stille">skrive av ${ny.oppsummering_kjelde}</p>` : html`<p class="stille" style="margin:10px 0 0">Inga modell-oppsummering: ${ny.oppsummering_kjelde || 'ikkje køyrt'}.</p>`}
       ${(ny.makro || []).length ? html`<details style="margin-top:10px"><summary>Makro-saker (${ny.makro.length})</summary><ul class="sloyfer">${ny.makro.slice(0, 15).map((m) => html`<li>${m.tittel} <span class="stille">· ${m.kjelde}</span></li>`)}</ul></details>` : null}
+    </section>
+    <section class="kort"><h2>World Monitor <small>${wm.aktiv ? 'kopla til globalt kjeldeunivers' : 'ikkje aktiv'} · ${wm.live_api ? 'live API på' : 'live API krev nøkkel'}</small></h2>
+      <div class="tal">
+        <${Flis} v=${wm.leverandørar || 0} l="leverandørar i World Monitor" />
+        <${Flis} v=${wm.medium || 0} l="namngjevne medium" />
+        <${Flis} v=${wm.land_i_rss || 0} l="land med eigen RSS-kanal" />
+        <${Flis} v=${ny.n_world_monitor_saker || 0} l="live World Monitor-saker i dag" />
+      </div>
+      <p class="stille" style="margin:10px 0 0">${wm.merknad || 'World Monitor har ikkje køyrt enno.'}</p>
     </section>
     <section class="kort"><h2>Forsking <small>arXiv q-fin · ${fmt(fo.totalt_lesne)} artiklar lesne totalt · ${fmt(fo.n_med_idear)} med idear i dag</small></h2>
       ${(fo.artiklar || []).length ? html`<div class="scroll"><table><thead><tr><th>Artikkel</th><th>Dato</th><th>Idear (primitivar til genom)</th></tr></thead><tbody>

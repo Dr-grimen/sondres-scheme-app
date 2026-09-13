@@ -13,8 +13,8 @@ export function Selskapet({ tilstand }) {
   const faste = agentar.filter((a) => !a.bot && !String(a.namn || '').startsWith('bot_'));
   const botter = agentar.filter((a) => a.bot || String(a.namn || '').startsWith('bot_'));
   const totalt = (tilstand && (tilstand.n_agentar ?? agentar.length)) || agentar.length;
-  const botTabell = botter.length ? html`<div class="scroll"><table><thead><tr><th>Bot</th><th>Eigedel</th><th>Strategi</th><th>Parametrar</th><th>Vakt</th></tr></thead><tbody>
-    ${botter.map((a) => html`<tr><td class="mono">${P(a.namn)}</td><td>${(a.eigedel || {}).namn || (a.eigedel || {}).symbol || '–'}</td><td>${a.strategy || '–'}</td><td class="mono">${a.params ? JSON.stringify(a.params) : '–'}</td><td>${a.tidsplan || '–'}</td></tr>`)}
+  const botTabell = botter.length ? html`<div class="scroll"><table><thead><tr><th>Bot</th><th>Kategori</th><th>Eigedel</th><th>Strategi</th><th>Parametrar</th><th>Vakt</th></tr></thead><tbody>
+    ${botter.map((a) => html`<tr><td class="mono">${P(a.namn)}</td><td>${a.kategori || "-"}</td><td>${(a.eigedel || {}).namn || (a.eigedel || {}).symbol || '–'}</td><td>${a.strategy || '–'}</td><td class="mono">${a.params ? JSON.stringify(a.params) : '–'}</td><td>${a.tidsplan || '–'}</td></tr>`)}
   </tbody></table></div>` : html`<${Tom} tekst="ingen botter registrerte enno" />`;
   const tankar = (t && t.tankar) || [];
   const per = {};
@@ -79,7 +79,12 @@ export function Selskapet({ tilstand }) {
     </section>
     ${post.length ? html`<section class="kort"><h2>Posten mellom agentane <small>${post.length} brev</small></h2>
       <div class="logg">${[...post].reverse().map((b) => html`<div class="rad"><span class="ts">${klokke(b.ts)}</span><span><span class="agent">${P(b.fraa)}</span> → <b>${P(b.til)}</b>: ${b.tekst}</span></div>`)}</div></section>` : null}
-    <section class="kort"><h2>Botflåten <small>${botter.length} botter · alle har ei dagleg vakt</small></h2>
+    ${botter.filter((a) => a.sektor_sjef).length ? html`<section class="kort"><h2>Sektorjefer</h2>
+      <div class="scroll"><table><thead><tr><th>Sektor</th><th>Sjef</th><th>Bot</th></tr></thead><tbody>
+        ${botter.filter((a) => a.sektor_sjef).map((a) => html`<tr><td>${a.kategori || "-"}</td><td>${P(a.namn)}</td><td class="mono">${a.namn}</td></tr>`)}
+      </tbody></table></div>
+    </section>` : null}
+    <section class="kort"><h2>Botflåten <small>${botter.length} botter · 150 crypto · 150 MetaTrader · 100 Polymarket · 50 forsking · alle har ei dagleg vakt</small></h2>
       ${botTabell}
     </section>
     <section class="kort"><h2>Rolleagentane <small>trykk for å sjå tankane</small></h2>

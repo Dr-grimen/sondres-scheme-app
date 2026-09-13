@@ -12,7 +12,7 @@ export function Kunnskap() {
   if (!k || (!k.nyheiter && !k.forsking && !k.boker)) return html`<div class="fase">>>> MINNE // KUNNSKAP</div><${Tom} tekst="kunnskapsløypa har ikkje køyrt enno (dagleg 05:00 UTC, eller python -m scheme.main kunnskap)" />`;
   const ny = k.nyheiter || {}; const fo = k.forsking || {}; const bo = k.boker || {}; const reg = ny.regime || {}; const llm = k.llm || {};
   const per = Object.entries(ny.per_instrument || {}).sort((a, b) => b[1].n - a[1].n);
-  const wm = ny.world_monitor || {};
+  const wm = ny.world_monitor || {}; const arb = k.arbitrage || {}; const arbMog = arb.moglegheiter || []; const arb = k.arbitrage || {}; const arbMog = arb.moglegheiter || [];
   return html`
     <div class="fase">>>> MINNE // KUNNSKAP · ${fmt(ny.n_saker)} SAKER · ${fmt(fo.n_artiklar)} ARTIKLAR · ${fmt(bo.n_filer)} BØKER</div>
     <section class="kort"><h2>Regime no <small>skjult Markov-modell på avkastning og volatilitet · ${ny.dato || ''}</small></h2>
@@ -35,6 +35,20 @@ export function Kunnskap() {
         <${Flis} v=${ny.n_world_monitor_saker || 0} l="live World Monitor-saker i dag" />
       </div>
       <p class="stille" style="margin:10px 0 0">${wm.merknad || 'World Monitor har ikkje køyrt enno.'}</p>
+    </section>
+    <section class="kort"><h2>Polymarket + Kalshi arbitrase <small>${arb.n_polymarket || 0} Polymarket · ${arb.n_kalshi || 0} Kalshi · ${arb.n_moglegheiter || 0} funn</small></h2>
+      <p class="stille">${arb.merknad || 'Arbitrasevakta har ikkje køyrt enno.'}</p>
+      ${arbMog.length ? html`<div class="scroll"><table><thead><tr><th>Kandidat</th><th>Retning</th><th class="r">Samla</th><th class="r">Gebyr</th><th class="r">Netto</th><th class="r">Tryggleik</th></tr></thead><tbody>
+        ${arbMog.map((r) => html`<tr><td class="status"><a href=${r.lenkje_poly} target="_blank" rel="noopener">${r.spurnad_poly}</a> <span class="stille">↔ <a href=${r.lenkje_kalshi} target="_blank" rel="noopener">Kalshi</a></span></td><td>${r.retning}</td><td class="r">${fmt(r.samla_kost, 4)}</td><td class="r">${fmt(r.gebyr, 4)}</td><td class="r opp">+${fmt(r.netto_per_kontrakt, 4)}</td><td class="r">${fmt(100 * r.tryggleik)} %</td></tr>`)}
+      </tbody></table></div>` : html`<${Tom} tekst="Ingen kandidatar med positivt netto estimat akkurat no." />`}
+      ${(arb.feil || {}).polymarket || (arb.feil || {}).kalshi ? html`<p class="stille">Datafeil: ${[arb.feil.polymarket, arb.feil.kalshi].filter(Boolean).join(' · ')}</p>` : null}
+    </section>
+    <section class="kort"><h2>Polymarket + Kalshi arbitrase <small>${arb.n_polymarket || 0} Polymarket · ${arb.n_kalshi || 0} Kalshi · ${arb.n_moglegheiter || 0} funn</small></h2>
+      <p class="stille">${arb.merknad || 'Arbitrasevakta har ikkje køyrt enno.'}</p>
+      ${arbMog.length ? html`<div class="scroll"><table><thead><tr><th>Kandidat</th><th>Retning</th><th class="r">Samla</th><th class="r">Gebyr</th><th class="r">Netto</th><th class="r">Tryggleik</th></tr></thead><tbody>
+        ${arbMog.map((r) => html`<tr><td class="status"><a href=${r.lenkje_poly} target="_blank" rel="noopener">${r.spurnad_poly}</a> <span class="stille">↔ <a href=${r.lenkje_kalshi} target="_blank" rel="noopener">Kalshi</a></span></td><td>${r.retning}</td><td class="r">${fmt(r.samla_kost, 4)}</td><td class="r">${fmt(r.gebyr, 4)}</td><td class="r opp">+${fmt(r.netto_per_kontrakt, 4)}</td><td class="r">${fmt(100 * r.tryggleik)} %</td></tr>`)}
+      </tbody></table></div>` : html`<${Tom} tekst="Ingen kandidatar med positivt netto estimat akkurat no." />`}
+      ${(arb.feil || {}).polymarket || (arb.feil || {}).kalshi ? html`<p class="stille">Datafeil: ${[arb.feil.polymarket, arb.feil.kalshi].filter(Boolean).join(' · ')}</p>` : null}
     </section>
     <section class="kort"><h2>Forsking <small>arXiv q-fin · ${fmt(fo.totalt_lesne)} artiklar lesne totalt · ${fmt(fo.n_med_idear)} med idear i dag</small></h2>
       ${(fo.artiklar || []).length ? html`<div class="scroll"><table><thead><tr><th>Artikkel</th><th>Dato</th><th>Idear (primitivar til genom)</th></tr></thead><tbody>

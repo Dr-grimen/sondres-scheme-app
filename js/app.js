@@ -72,7 +72,7 @@ function App() {
   return html`
     <${Nav} side=${r.side} />
     <main class="ramme">
-      <${Topp} tilstand=${tilstand} tittel=${tittel} aktive=${aktiveAgentar(tankar)} totalt=${((tilstand || {}).agentar || []).length} />
+      <${Topp} tilstand=${tilstand} tittel=${tittel} aktive=${aktiveAgentar(tankar)} totalt=${(tilstand || {}).n_agentar ?? ((tilstand || {}).agentar || []).length} />
       ${tilstand && tilstand.kill_switch ? html`<div class="varsel">KILL-SWITCH UTLØYST: alt er flata. Må nullstillast manuelt i state.json.</div>` : null}
       ${tilstand && tilstand.modus === 'EKTE' ? html`<div class="varsel">EKTE PENGAR. Begge låsane er opne.</div>` : null}
       ${feil ? html`<div class="varsel">Kunne ikkje lese data: ${feil}</div>` : null}

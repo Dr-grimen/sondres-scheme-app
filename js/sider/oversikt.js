@@ -105,7 +105,8 @@ export function Oversikt({ tilstand }) {
         <${Flis} v=${hj.tankar_i_dag} l="tankar logga i dag" kl="cyan" />
         <${Flis} v=${hj.nyheitssaker} l="nyheitssaker lesne (polybot)" />
         <${Flis} v=${hj.forskingssaker} l="forskingssaker og bøker" />
-        <${Flis} v=${(tilstand.agentar || []).length} l="rolleagentar i selskapet" />
+        <${Flis} v=${tilstand.n_botter ?? (tilstand.agentar || []).filter((a) => a.bot || a.namn?.startsWith('bot_')).length} l="botter i flåten" kl="gron" />
+        <${Flis} v=${tilstand.n_agentar ?? (tilstand.agentar || []).length} l="agentar og botter totalt" />
       </div>
       ${hend.length ? html`<div class="logg" style="margin-top:12px">${hend.slice(-12).reverse().map((e) => html`<div class="rad"><span class="ts">${klokke(e.ts)}</span><span><span class="agent">${e.agent}</span> · <span class="hend">${e.hending}</span> · ${e.kva} — ${e.avgjerd}</span></div>`)}</div>`
         : html`<p class="stille" style="margin:10px 0 0">Ingen læringshendingar i dag enno. ${tankar.length} tankar er logga; sjå Selskapet.</p>`}

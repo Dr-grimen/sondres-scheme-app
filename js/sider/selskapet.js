@@ -10,6 +10,12 @@ export function Selskapet({ tilstand }) {
   const [vald, setVald] = useState(null);
   useEffect(() => { last('tankar').then(setT); last('selskap').then(setSel); }, []);
   const agentar = (tilstand && tilstand.agentar) || [];
+  const faste = agentar.filter((a) => !a.bot && !String(a.namn || '').startsWith('bot_'));
+  const botter = agentar.filter((a) => a.bot || String(a.namn || '').startsWith('bot_'));
+  const totalt = (tilstand && (tilstand.n_agentar ?? agentar.length)) || agentar.length;
+  const botTabell = botter.length ? html`<div class="scroll"><table><thead><tr><th>Bot</th><th>Eigedel</th><th>Strategi</th><th>Parametrar</th><th>Vakt</th></tr></thead><tbody>
+    ${botter.map((a) => html`<tr><td class="mono">${P(a.namn)}</td><td>${(a.eigedel || {}).namn || (a.eigedel || {}).symbol || '–'}</td><td>${a.strategy || '–'}</td><td class="mono">${a.params ? JSON.stringify(a.params) : '–'}</td><td>${a.tidsplan || '–'}</td></tr>`)}
+  </tbody></table></div>` : html`<${Tom} tekst="ingen botter registrerte enno" />`;
   const tankar = (t && t.tankar) || [];
   const per = {};
   for (const x of tankar) (per[x.agent] = per[x.agent] || []).push(x);
@@ -25,7 +31,7 @@ export function Selskapet({ tilstand }) {
   const nPaaJobb = (t && t.n_agentar_i_dag != null) ? t.n_agentar_i_dag : Object.keys(per).length;
   const nTankar = (t && t.n_tankar_i_dag != null) ? t.n_tankar_i_dag : tankar.length;
   return html`
-    <div class="fase">>>> SELSKAPET // ${agentar.length} FASTE AGENTAR · ${nPaaJobb} PÅ JOBB I DAG · ${nTankar} TANKAR</div>
+    <div class="fase">>>> SELSKAPET // ${faste.length} FASTE + ${botter.length} BOTTER = ${totalt} · ${nPaaJobb} PÅ JOBB I DAG · ${nTankar} TANKAR</div>
     <p class="stille" style="margin:-6px 0 10px">Ingen agent blir sletta. Har han ikkje tankar i dag, ventar han på vakta si. Minnet hans står uansett.</p>
     ${ordre.tittel ? html`<section class="kort" style="border-color:rgba(52,211,153,.45)">
       <h2>Ordren frå Sondre <small>kvar agent les denne fyrst, i kvar vakt · config.yaml</small></h2>
@@ -73,8 +79,11 @@ export function Selskapet({ tilstand }) {
     </section>
     ${post.length ? html`<section class="kort"><h2>Posten mellom agentane <small>${post.length} brev</small></h2>
       <div class="logg">${[...post].reverse().map((b) => html`<div class="rad"><span class="ts">${klokke(b.ts)}</span><span><span class="agent">${P(b.fraa)}</span> → <b>${P(b.til)}</b>: ${b.tekst}</span></div>`)}</div></section>` : null}
+    <section class="kort"><h2>Botflåten <small>${botter.length} botter · alle har ei dagleg vakt</small></h2>
+      ${botTabell}
+    </section>
     <section class="kort"><h2>Rolleagentane <small>trykk for å sjå tankane</small></h2>
-      ${agentar.length ? html`<div class="agentar">${agentar.map((a) => { const mine = per[a.namn] || []; const sist = mine.length ? mine[mine.length - 1] : null; const aktiv = sist && new Date(sist.ts).getTime() > grense; return html`
+      ${faste.length ? html`<div class="agentar">${faste.map((a) => { const mine = per[a.namn] || []; const sist = mine.length ? mine[mine.length - 1] : null; const aktiv = sist && new Date(sist.ts).getTime() > grense; return html`
         <div class="agent ${aktiv ? 'aktiv' : ''} ${vald === a.namn ? 'aktiv' : ''}" onClick=${() => setVald(vald === a.namn ? null : a.namn)} style="cursor:pointer">
           <div class="n"><span>${P(a.namn)} · ${a.tittel}</span><small>${a.region.toUpperCase()}</small></div>
           <div class="j">${a.jobb}</div>

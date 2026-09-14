@@ -4,7 +4,7 @@
    appen alltid viser den siste tilstanden han såg – og seier kor gammal han er. */
 // VERSJON blir sett automatisk til innhaldssummen av skalet når appen blir publisert
 // (scheme/app/publish.py -> stempl_sw). Rør han ikkje for hand.
-const VERSJON = 'scheme-ba69e7eb2d77';
+const VERSJON = 'scheme-f7209ea6a6f6';
 const SKAL = [
   './', './index.html', './manifest.json', './css/app.css',
   './js/app.js', './js/data.js', './js/ui.js', './js/brain3d.js',

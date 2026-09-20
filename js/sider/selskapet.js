@@ -12,27 +12,31 @@ export function Selskapet({ tilstand }) {
   const agentar = (tilstand && tilstand.agentar) || [];
   const faste = agentar.filter((a) => !a.bot && !String(a.namn || '').startsWith('bot_'));
   const botter = agentar.filter((a) => a.bot || String(a.namn || '').startsWith('bot_'));
+  const pn = (sel && sel.personnamn) || {}; const P = (a) => pn[a] || a;
+  const kategoriNamn = {metatrader: 'Trading.com', polymarket: 'Polymarket', kalshi: 'Kalshi'};
+  const fordeling = botter.reduce((tal, a) => { const k = a.kategori || 'ukjend'; tal[k] = (tal[k] || 0) + 1; return tal; }, {});
+  const fordelingTekst = Object.entries(fordeling).map(([k, n]) => `${n} ${kategoriNamn[k] || k}`).join(' · ');
   const totalt = (tilstand && (tilstand.n_agentar ?? agentar.length)) || agentar.length;
   const botTabell = botter.length ? html`<div class="scroll"><table><thead><tr><th>Bot</th><th>Kategori</th><th>Eigedel</th><th>Strategi</th><th>Parametrar</th><th>Vakt</th></tr></thead><tbody>
-    ${botter.map((a) => html`<tr><td class="mono">${P(a.namn)}</td><td>${a.kategori || "-"}</td><td>${(a.eigedel || {}).namn || (a.eigedel || {}).symbol || '–'}</td><td>${a.strategy || '–'}</td><td class="mono">${a.params ? JSON.stringify(a.params) : '–'}</td><td>${a.tidsplan || '–'}</td></tr>`)}
+    ${botter.map((a) => html`<tr><td class="mono">${P(a.namn)}</td><td>${kategoriNamn[a.kategori] || a.kategori || "-"}</td><td>${(a.eigedel || {}).namn || (a.eigedel || {}).symbol || '–'}</td><td>${a.strategy || '–'}</td><td class="mono">${a.params ? JSON.stringify(a.params) : '–'}</td><td>${a.tidsplan || '–'}</td></tr>`)}
   </tbody></table></div>` : html`<${Tom} tekst="ingen botter registrerte enno" />`;
   const tankar = (t && t.tankar) || [];
+  const loggdag = (t && t.dag) || (tankar.length ? String(tankar[tankar.length - 1].ts || '').slice(0, 10) : null) || 'ukjend dato';
   const per = {};
   for (const x of tankar) (per[x.agent] = per[x.agent] || []).push(x);
   const grense = Date.now() - 2 * 3600 * 1000;
   const vis = vald ? tankar.filter((x) => x.agent === vald) : tankar;
   const leiar = (sel && sel.leiar) || {}; const valg = (sel && sel.val) || {}; const sting = (sel && sel.storting) || {};
-  const pn = (sel && sel.personnamn) || {}; const P = (a) => pn[a] || a;
   const moete = (sel && sel.moete) || {}; const natt = (sel && sel.nattforslag) || {}; const minne = (sel && sel.minne) || {}; const post = (sel && sel.post) || [];
   const oppdrag = leiar.oppdrag || {}; const mandat = leiar.mandat || {};
-  const ordre = leiar.ordre || {};
+  const ordre = (tilstand && tilstand.ordre) || leiar.ordre || {};
   // Heile dagen, ikkje berre dei 500 siste tankane (som alle kjem frå dei nyaste vaktene).
   const perAgent = (t && t.per_agent) || [];
   const nPaaJobb = (t && t.n_agentar_i_dag != null) ? t.n_agentar_i_dag : Object.keys(per).length;
   const nTankar = (t && t.n_tankar_i_dag != null) ? t.n_tankar_i_dag : tankar.length;
   return html`
-    <div class="fase">>>> SELSKAPET // ${faste.length} FASTE + ${botter.length} BOTTER = ${totalt} · ${nPaaJobb} PÅ JOBB I DAG · ${nTankar} TANKAR</div>
-    <p class="stille" style="margin:-6px 0 10px">Ingen agent blir sletta. Har han ikkje tankar i dag, ventar han på vakta si. Minnet hans står uansett.</p>
+    <div class="fase">>>> SELSKAPET // ${faste.length} FASTE + ${botter.length} BOTTER = ${totalt} · ${nPaaJobb} I LOGGEN ${loggdag} · ${nTankar} INNLEGG</div>
+    <p class="stille" style="margin:-6px 0 10px">Oppdraga over er gjeldande oppsett. Aktiviteten nedanfor kjem frå den daterte dagsloggen; nye oppdrag betyr ikkje at agentane alt har køyrt dei.</p>
     ${ordre.tittel ? html`<section class="kort" style="border-color:rgba(52,211,153,.45)">
       <h2>Ordren frå Sondre <small>kvar agent les denne fyrst, i kvar vakt · config.yaml</small></h2>
       <p style="font-size:17px;font-weight:600;color:var(--gron);margin:0 0 8px">${ordre.tittel}</p>
@@ -41,7 +45,7 @@ export function Selskapet({ tilstand }) {
         <p class="stille" style="white-space:pre-line">${ordre.slik_gjeld_det}</p></details>` : null}
       ${ordre.grensa_som_står ? html`<p class="stille" style="white-space:pre-line;margin-top:8px">${ordre['grensa_som_står']}</p>` : null}
     </section>` : null}
-    ${perAgent.length ? html`<section class="kort"><h2>Kven jobba i dag <small>heile dagen, ikkje eit utsnitt</small></h2>
+    ${perAgent.length ? html`<section class="kort"><h2>Kven skreiv i siste dagslogg <small>${loggdag} · heile den lagra dagen</small></h2>
       <div class="scroll"><table><thead><tr><th>Agent</th><th class="r">Tankar</th><th>Fyrst</th><th>Sist</th><th>Siste avgjerd</th></tr></thead><tbody>
         ${perAgent.map((r) => html`<tr><td>${P(r.agent)} <small class="stille">${r.agent}</small></td><td class="r">${fmt(r.n)}</td><td>${klokke(r.fyrste)}</td><td>${klokke(r.siste)}</td><td class="stille">${(r.sist_avgjerd || '').slice(0, 70)}</td></tr>`)}
       </tbody></table></div>
@@ -81,10 +85,11 @@ export function Selskapet({ tilstand }) {
       <div class="logg">${[...post].reverse().map((b) => html`<div class="rad"><span class="ts">${klokke(b.ts)}</span><span><span class="agent">${P(b.fraa)}</span> → <b>${P(b.til)}</b>: ${b.tekst}</span></div>`)}</div></section>` : null}
     ${botter.filter((a) => a.sektor_sjef).length ? html`<section class="kort"><h2>Sektorjefer</h2>
       <div class="scroll"><table><thead><tr><th>Sektor</th><th>Sjef</th><th>Bot</th></tr></thead><tbody>
-        ${botter.filter((a) => a.sektor_sjef).map((a) => html`<tr><td>${a.kategori || "-"}</td><td>${P(a.namn)}</td><td class="mono">${a.namn}</td></tr>`)}
+        ${botter.filter((a) => a.sektor_sjef).map((a) => html`<tr><td>${kategoriNamn[a.kategori] || a.kategori || "-"}</td><td>${P(a.namn)}</td><td class="mono">${a.namn}</td></tr>`)}
       </tbody></table></div>
     </section>` : null}
-    <section class="kort"><h2>Botflåten <small>${botter.length} botter · 150 crypto · 150 MetaTrader · 100 Polymarket · 50 forsking · alle har ei dagleg vakt</small></h2>
+    <section class="kort"><h2>Botflåten <small>${botter.length} botter · ${fordelingTekst}</small></h2>
+      <p class="stille">Fordelinga kjem frå dei registrerte oppdraga. Tal agentar seier ikkje kor mange marknader som faktisk er undersøkte; sjå dekninga under Skann.</p>
       ${botTabell}
     </section>
     <section class="kort"><h2>Rolleagentane <small>trykk for å sjå tankane</small></h2>
@@ -93,7 +98,7 @@ export function Selskapet({ tilstand }) {
           <div class="n"><span>${P(a.namn)} · ${a.tittel}</span><small>${a.region.toUpperCase()}</small></div>
           <div class="j">${a.jobb}</div>
           <div class="s">${a.tidsplan}${(per[a.namn] || []).length ? '' : ' · ventar på vakt'}</div>
-          <div class="s">${sist ? `${mine.length} tankar i dag · sist ${alderTekst(sist.ts)}` : 'ingen tankar i dag enno'}</div>
+          <div class="s">${sist ? `${mine.length} innlegg i loggen · sist ${alderTekst(sist.ts)}` : 'ingen innlegg i denne dagsloggen'}</div>
           ${minne[a.namn] ? html`<div class="s">${fmt(minne[a.namn].koeyringar)} køyringar · ${Object.keys(minne[a.namn].laerdom || {}).length} lærdomar${minne[a.namn].oppdrag ? ` · oppdrag: ${minne[a.namn].oppdrag.kva}` : ''}</div>` : null}
           ${vald === a.namn && minne[a.namn] && Object.keys(minne[a.namn].laerdom || {}).length ? html`<div class="logg" style="margin-top:6px">${Object.entries(minne[a.namn].laerdom).map(([k, v]) => html`<div class="rad"><span class="ts">${v.n}×</span><span><b>${k}</b>: ${typeof v.verdi === 'object' ? JSON.stringify(v.verdi) : String(v.verdi)}</span></div>`)}</div>` : null}
           ${sist ? html`<div class="stolpe"><i style=${`width:${Math.min(100, mine.length * 10)}%`}></i></div>` : null}
@@ -102,6 +107,6 @@ export function Selskapet({ tilstand }) {
     <section class="kort"><h2>Tankelogg ${vald ? html`<small>berre ${vald} · <a href="#" onClick=${(e) => { e.preventDefault(); setVald(null); }}>vis alle</a></small>` : html`<small>alle agentar, nyaste fyrst</small>`}</h2>
       ${vis.length ? html`<div class="logg" style="max-height:60vh">${[...vis].reverse().map((x) => html`
         <div class="rad"><span class="ts">${klokke(x.ts)}</span><span><span class="agent">${x.agent}</span> såg på <b>${x.inn}</b> · tenkte: ${x.resonnement} · <i>${x.avgjerd}</i>${x.hending ? html` · <span class="hend">${x.hending}</span>` : null}${x.filer && x.filer.length ? html` <span class="stille">[${x.filer.join(', ')}]</span>` : null}</span></div>`)}</div>`
-        : html`<${Tom} tekst="ingen tankar logga i dag enno" />`}
+        : html`<${Tom} tekst="ingen innlegg i denne dagsloggen" />`}
     </section>`;
 }

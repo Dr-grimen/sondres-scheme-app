@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'preact/hooks';
 import { html, Flis, Tom, fmt, pst, dato } from '../ui.js';
-import { last } from '../data.js';
+import { lastAlle } from '../data.js';
+import { PolymarketKort } from '../polymarket.js';
 
-/* Skann: topp-100 aksjar og krypto kvar morgon. Dei fem største utliggjarane på volum, volatilitet og
+/* Offentleg marknadsskann og historiske prisreferansar. Dei fem største utliggjarane på volum, volatilitet og
    avstand frå snittet. Alle tal kjem frå results/skann/siste.json; ingenting blir rekna i nettlesaren. */
 
 const MAAL = {
@@ -24,26 +25,27 @@ function Tabell({ rader, kva }) {
 }
 
 export function Skann() {
-  const [d, setD] = useState(undefined);
-  const [gruppe, setGruppe] = useState('alle');
-  useEffect(() => { last('skann').then(setD); }, []);
-  if (d === undefined) return html`<div class="lastar mono">>>> LASTAR …</div>`;
-  if (!d || !d.rader) return html`<${Tom} tekst="Skannaren har ikkje køyrt enno (05:00 UTC kvar morgon)" />`;
-  const topp = gruppe === 'aksjar' ? (d.topp_aksjar || {}) : (gruppe === 'krypto' ? (d.topp_krypto || {}) : (d.topp || {}));
-  const rader = (d.rader || []).filter((r) => gruppe === 'alle' || (gruppe === 'aksjar' ? r.gruppe === 'aksje' : r.gruppe === 'krypto'));
+  const [data, setD] = useState(undefined);
+  useEffect(() => { lastAlle(['skann', 'polymarket']).then(setD); }, []);
+  if (data === undefined) return html`<div class="lastar mono">>>> LASTAR …</div>`;
+  const poly = data && data.polymarket;
+  const skann = (data && data.skann) || {};
+  const rader = (skann.rader || []).filter((r) => r.gruppe !== 'krypto');
+  const topp = skann.topp_aksjar || skann.topp || {};
+  const d = skann;
   return html`
-    <div class="fase">>>> SANSAR // SKANN · ${d.dato}</div>
-    <section class="kort"><h2>Universet <small>${d.merknad}</small></h2>
+    <div class="fase">>>> SANSAR // MARKNADSSKANN</div>
+    <${PolymarketKort} snapshot=${poly && poly.snapshot} />
+    <section class="kort"><h2>Trading.com · marknadsreferansar <small>${d.dato || 'ingen måledato'}</small></h2>
+      <p class="stille">Prisreferansar til analyse. Dette er ikkje ei stadfesting av tilgjengelege Trading.com-kontraktar.</p>
       <div class="flis-rad">
         <${Flis} v=${d.n_aksjar} l="aksjar (Nasdaq-100)" />
-        <${Flis} v=${d.n_krypto} l="kryptopar" />
         <${Flis} v=${d.n_hoppa_over} l="utan nok data" />
         <${Flis} v=${(d.ufullstendig || []).length} l="rekna på siste heile dag" />
       </div>
-      <div style="margin-top:10px">${['alle', 'aksjar', 'krypto'].map((g) => html`<button class=${'knapp' + (gruppe === g ? ' aktiv' : '')} onClick=${() => setGruppe(g)}>${g.toUpperCase()}</button> `)}</div>
     </section>
     ${Object.keys(MAAL).map((kva) => html`<section class="kort"><h2>${MAAL[kva].tittel} <small>${MAAL[kva].hjelp}</small></h2>
-      <${Tabell} rader=${topp[kva]} kva=${kva} /></section>`)}
+      <${Tabell} rader=${(topp[kva] || []).filter((r) => r.gruppe !== 'krypto')} kva=${kva} /></section>`)}
     <section class="kort"><h2>Heile universet <small>${rader.length} symbol</small></h2>
       <details><summary>Vis alle</summary>
         <div class="scroll"><table><thead><tr><th>Symbol</th><th class="r">rvol</th><th class="r">vol/ATR</th><th class="r">ATR frå SMA20</th><th class="r">SMA50</th><th class="r">SMA200</th><th class="r">I dag</th></tr></thead><tbody>

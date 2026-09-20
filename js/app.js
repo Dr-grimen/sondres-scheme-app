@@ -1,8 +1,8 @@
 /* Sondres scheme – appen. Hash-ruting, éin tilstand (data/tilstand.json), sider under js/sider/. */
 import { render } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, useRef } from 'preact/hooks';
 import { html, Topp, Nav, SIDER } from './ui.js';
-import { last, TrengPassfrase, FeilPassfrase, harPassfrase, setPassfrase } from './data.js';
+import { last, TrengPassfrase, FeilPassfrase, harPassfrase, setPassfrase, tøm } from './data.js';
 import { Oversikt } from './sider/oversikt.js';
 import { Hjernen } from './sider/hjernen.js';
 import { Selskapet } from './sider/selskapet.js';
@@ -11,6 +11,7 @@ import { Avl } from './sider/avl.js';
 import { Eksamen } from './sider/eksamen.js';
 import { Stresslab } from './sider/stresslab.js';
 import { Skann } from './sider/skann.js';
+import { Arbitrase } from './sider/arbitrase.js';
 import { Nivaa } from './sider/nivaa.js';
 import { Varslar as Varsel } from './sider/varsel.js';
 import { Kunnskap } from './sider/kunnskap.js';
@@ -22,7 +23,7 @@ import { Papir } from './sider/papir.js';
 import { Sanning } from './sider/sanning.js';
 import { Innlogging } from './sider/innlogging.js';
 
-const SIDEKOMP = { oversikt: Oversikt, skann: Skann, nivaa: Nivaa, varsel: Varsel, hjernen: Hjernen, provebane: Provebane, avl: Avl, eksamen: Eksamen, stresslab: Stresslab, kunnskap: Kunnskap, meklarar: Meklarar, uttak: Uttak, rapportar: Rapportar, selskapet: Selskapet, turnering: Turnering, papir: Papir, sanning: Sanning };
+const SIDEKOMP = { oversikt: Oversikt, skann: Skann, arbitrase: Arbitrase, nivaa: Nivaa, varsel: Varsel, hjernen: Hjernen, provebane: Provebane, avl: Avl, eksamen: Eksamen, stresslab: Stresslab, kunnskap: Kunnskap, meklarar: Meklarar, uttak: Uttak, rapportar: Rapportar, selskapet: Selskapet, turnering: Turnering, papir: Papir, sanning: Sanning };
 
 function rute() {
   const h = (location.hash || '#/oversikt').replace(/^#\/?/, '');
@@ -46,12 +47,18 @@ function App() {
   const [tankar, setTankar] = useState(null);
   const [laas, setLaas] = useState(null);   // 'treng' | 'feil' | null
   const [feil, setFeil] = useState(null);
+  const sistGenerert = useRef(null);
 
   useEffect(() => { const f = () => setR(rute()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
 
   const hent = async () => {
     try {
       const t = await last('tilstand', { fersk: true });
+      if (t && t.generert !== sistGenerert.current) {
+        tøm();
+        sistGenerert.current = t.generert;
+      }
+      setFeil(null);
       setTilstand(t);
       setLaas(null);
       setTankar(await last('tankar', { fersk: true }));
@@ -73,10 +80,10 @@ function App() {
     <${Nav} side=${r.side} />
     <main class="ramme">
       <${Topp} tilstand=${tilstand} tittel=${tittel} aktive=${aktiveAgentar(tankar)} totalt=${(tilstand || {}).n_agentar ?? ((tilstand || {}).agentar || []).length} />
-      ${tilstand && tilstand.kill_switch ? html`<div class="varsel">KILL-SWITCH UTLØYST: alt er flata. Må nullstillast manuelt i state.json.</div>` : null}
-      ${tilstand && tilstand.modus === 'EKTE' ? html`<div class="varsel">EKTE PENGAR. Begge låsane er opne.</div>` : null}
+      ${tilstand && tilstand.kill_switch ? html`<div class="varsel">KILL-SWITCH UTLØYST i papirboka. Kontostatus hos meklaren må kontrollerast separat.</div>` : null}
+      ${tilstand && tilstand.modus === 'EKTE' ? html`<div class="varsel">INNSTILLING FOR EKTE HANDEL. Sjå Meklarar for stadfesta kontostatus.</div>` : null}
       ${feil ? html`<div class="varsel">Kunne ikkje lese data: ${feil}</div>` : null}
-      ${tilstand === undefined ? html`<div class="lastar mono">>>> LASTAR TILSTAND …</div>` : html`<${Side} tilstand=${tilstand} arg=${r.arg} />`}
+      ${tilstand === undefined ? html`<div class="lastar mono">>>> LASTAR TILSTAND …</div>` : html`<${Side} key=${`${r.side}:${(tilstand || {}).generert || "tom"}`} tilstand=${tilstand} arg=${r.arg} />`}
       <footer>${tilstand ? `tilstand generert ${new Date(tilstand.generert).toLocaleString('nb-NO')} · alle tal frå filer i repoet · ingen lovnad om avkastning` : 'ingen tilstand enno'}
         ${harPassfrase() ? html` · <a href="#" onClick=${(e) => { e.preventDefault(); setPassfrase(null); location.reload(); }}>lås</a>` : null}</footer>
     </main>`;

@@ -4,10 +4,10 @@
    appen alltid viser den siste tilstanden han såg – og seier kor gammal han er. */
 // VERSJON blir sett automatisk til innhaldssummen av skalet når appen blir publisert
 // (scheme/app/publish.py -> stempl_sw). Rør han ikkje for hand.
-const VERSJON = 'scheme-f7209ea6a6f6';
+const VERSJON = 'scheme-0df9f8f8ada5';
 const SKAL = [
   './', './index.html', './manifest.json', './css/app.css',
-  './js/app.js', './js/data.js', './js/ui.js', './js/brain3d.js',
+  './js/app.js', './js/data.js', './js/ui.js', './js/brain3d.js', './js/polymarket.js', './js/sider/arbitrase.js',
   './js/sider/oversikt.js', './js/sider/hjernen.js', './js/sider/turnering.js', './js/sider/papir.js', './js/sider/sanning.js',
   './js/sider/selskapet.js', './js/sider/innlogging.js', './js/sider/provebane.js', './js/sider/avl.js', './js/sider/eksamen.js', './js/sider/stresslab.js', './js/sider/kunnskap.js', './js/sider/meklarar.js', './js/sider/uttak.js', './js/sider/rapportar.js',
   './js/sider/skann.js', './js/sider/nivaa.js', './js/sider/varsel.js',

@@ -14,6 +14,7 @@ export const SIDER = [
   { id: 'eksamen', namn: 'Eksamen', ik: '✓' },
   { id: 'stresslab', namn: 'Stresslab', ik: '⚡' },
   { id: 'skann', namn: 'Skann', ik: '⌖' },
+  { id: 'arbitrase', namn: 'Arbitrase', ik: '⇌' },
   { id: 'nivaa', namn: 'Nivå', ik: '≡' },
   { id: 'varsel', namn: 'Varsel', ik: '!' },
   { id: 'kunnskap', namn: 'Kunnskap', ik: '📚' },
@@ -121,9 +122,9 @@ export function Topp({ tilstand, tittel, aktive = 0, totalt = 0 }) {
   const m = (tilstand && tilstand.modus) || 'PAPIR';
   return html`<header class="topp">
     <h1>Sondres scheme <small>${tittel}</small></h1>
-    <span class="modus modus-${m}">${m}</span>
-    <span class="live ${aktive ? '' : 'stille'}" title="Alle agentane er faste og forsvinn aldri. Talet viser kor mange som har jobba i dag; resten ventar på si neste vakt.">
-      <span class="prikk"></span> ${aktive ? `LIVE · ${aktive}${totalt ? ` av ${totalt}` : ''} agentar har jobba i dag` : 'STILLE · ventar på neste køyring'}</span>
+    <span class="modus modus-${m}" title="Handelsinnstilling, ikkje stadfesting av kontokopling eller utførte ordre">${m}</span>
+    <span class="live ${aktive ? '' : 'stille'}" title="Talet kjem frå den siste daterte dagsloggen. Gjeldande oppdrag og tidlegare aktivitet er to ulike ting.">
+      <span class="prikk"></span> ${aktive ? `LOGGA · ${aktive}${totalt ? ` av ${totalt}` : ''} agentar i siste dagslogg` : 'STILLE · ventar på neste køyring'}</span>
   </header>`;
 }
 

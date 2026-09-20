@@ -118,13 +118,33 @@ export function Kurve({ punkt, farge = 'var(--cyan)', h = 120, basis = null, tit
   </svg></div>`;
 }
 
-export function Topp({ tilstand, tittel, aktive = 0, totalt = 0 }) {
+export function aktivitetslogg(tilstand, tankar, no = Date.now()) {
+  const harRegister = Array.isArray(tilstand && tilstand.agentar);
+  const register = new Set(((tilstand && tilstand.agentar) || []).map((a) => a.namn));
+  const fullLogg = Array.isArray(tankar && tankar.per_agent);
+  const rader = (tankar && (fullLogg ? tankar.per_agent : tankar.tankar)) || [];
+  const logga = new Set(rader.map((r) => r.agent).filter(Boolean));
+  const registrerte = [...logga].filter((namn) => register.has(namn)).length;
+  const tidspunkt = rader.map((r) => fullLogg ? r.siste : r.ts).filter((ts) => Number.isFinite(Date.parse(ts)));
+  tidspunkt.sort((a, b) => Date.parse(b) - Date.parse(a));
+  const siste = tidspunkt[0] || null;
+  const dag = (tankar && tankar.dag) || (siste ? new Date(siste).toISOString().slice(0, 10) : null);
+  const alder = siste ? no - Date.parse(siste) : null;
+  return { dag, siste, fullLogg, harRegister, registrerte, historiske: harRegister ? logga.size - registrerte : 0,
+    logga: logga.size, totalt: harRegister ? register.size : ((tilstand && tilstand.n_agentar) || 0),
+    fersk: dag === new Date(no).toISOString().slice(0, 10) && alder !== null && alder >= -300000 && alder <= 3 * 3600000 };
+}
+
+export function Topp({ tilstand, tittel, tankar }) {
   const m = (tilstand && tilstand.modus) || 'PAPIR';
+  const a = aktivitetslogg(tilstand, tankar);
+  const tal = a.harRegister ? `${a.registrerte} av ${a.totalt} registrerte agentar` : `${a.logga} agentar`;
+  const tekst = a.dag ? `${a.fersk ? 'DAGSLOGG' : 'ELDRE LOGG'} · ${a.dag} UTC · ${a.fullLogg ? '' : 'minst '}${tal}${a.historiske ? ` + ${a.historiske} historiske` : ''} · sist ${alderTekst(a.siste)}` : 'INGEN DAGSLOGG · ventar på første køyring';
   return html`<header class="topp">
     <h1>Sondres scheme <small>${tittel}</small></h1>
     <span class="modus modus-${m}" title="Handelsinnstilling, ikkje stadfesting av kontokopling eller utførte ordre">${m}</span>
-    <span class="live ${aktive ? '' : 'stille'}" title="Talet kjem frå den siste daterte dagsloggen. Gjeldande oppdrag og tidlegare aktivitet er to ulike ting.">
-      <span class="prikk"></span> ${aktive ? `LOGGA · ${aktive}${totalt ? ` av ${totalt}` : ''} agentar i siste dagslogg` : 'STILLE · ventar på neste køyring'}</span>
+    <span class="live ${a.fersk ? '' : 'stille'}" title="Faktisk loggføring den oppgitte UTC-dagen, samanlikna med dagens agentregister. Ein logg kan òg innehalde feil og venting; han er ikkje bevis på vellukka arbeid. Eldre logg betyr at siste innlegg er meir enn tre timar gamalt eller frå ein tidlegare dag.">
+      <span class="prikk"></span> ${tekst}</span>
   </header>`;
 }
 

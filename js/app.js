@@ -31,16 +31,6 @@ function rute() {
   return { side: SIDEKOMP[side] ? side : 'oversikt', arg: rest.join('/') };
 }
 
-function aktiveAgentar(tankar) {
-  // Kor mange av agentane som har jobba i DAG. Bruk per_agent, som tel heile dagen. Fell tilbake på
-  // tankelista berre om eksporten er gammal - den er avkorta til dei 500 siste og undertel difor grovt
-  // (viste 11 av 36 medan 35 hadde jobba; funnen 9. sep 2026).
-  if (!tankar) return 0;
-  if (tankar.n_agentar_i_dag != null) return tankar.n_agentar_i_dag;
-  if (!tankar.tankar) return 0;
-  return new Set(tankar.tankar.map((t) => t.agent)).size;
-}
-
 function App() {
   const [r, setR] = useState(rute());
   const [tilstand, setTilstand] = useState(undefined);
@@ -79,7 +69,7 @@ function App() {
   return html`
     <${Nav} side=${r.side} />
     <main class="ramme">
-      <${Topp} tilstand=${tilstand} tittel=${tittel} aktive=${aktiveAgentar(tankar)} totalt=${(tilstand || {}).n_agentar ?? ((tilstand || {}).agentar || []).length} />
+      <${Topp} tilstand=${tilstand} tittel=${tittel} tankar=${tankar} />
       ${tilstand && tilstand.kill_switch ? html`<div class="varsel">KILL-SWITCH UTLØYST i papirboka. Kontostatus hos meklaren må kontrollerast separat.</div>` : null}
       ${tilstand && tilstand.modus === 'EKTE' ? html`<div class="varsel">INNSTILLING FOR EKTE HANDEL. Sjå Meklarar for stadfesta kontostatus.</div>` : null}
       ${feil ? html`<div class="varsel">Kunne ikkje lese data: ${feil}</div>` : null}

@@ -12,6 +12,10 @@ export function Uttak({ tilstand }) {
   const firi = (policy.optional_destination || {}).platform === 'firi';
   return html`
     <div class="fase">>>> UTTAK // INGEN AUTOMATISKE OVERFØRINGAR</div>
+    <section class="kort"><h2>Ta ut frå Firi</h2>
+      <p>Knappen opnar Firi. Der loggar du inn som vanleg og tek ut sjølv, med BankID eller kode. Appen og boten kan ikkje flytte pengar: Firi-nøkkelen har berre lesetilgang, med vilje.</p>
+      <p><a class="knapp aktiv" href="https://platform.firi.com" target="_blank" rel="noopener" style="display:inline-block;padding:12px 22px;font-size:16px">Ta ut frå Firi →</a></p>
+    </section>
     <section class="kort"><h2>${policy.retain_funds === true ? 'Pengane skal bli ståande' : 'Saldo og uttak'}</h2>
       ${policy.retain_funds === true ? html`<p>Planen er å behalde pengane på handelskontoane. Eventuell avkastning skal bli ståande der. Det er ikkje sett opp automatiske uttak.</p>` : html`<p>Det er ikkje sett opp automatiske uttak.</p>`}
       <p>Papirpengar i denne appen kan ikkje takast ut. Eit eventuelt manuelt uttak blir gjort i den innlogga kontoen hos plattforma.</p>

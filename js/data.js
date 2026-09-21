@@ -3,6 +3,10 @@
    GitHub Pages, låst opp med ein passfrase som ligg i nettlesaren etter fyrste gong. */
 
 const cache = new Map();
+// Inni Jarvis (bob-app/trading/) er appen ein kopi: då blir dataa henta ferske frå den publiserte sida (CORS er ope),
+// så Jarvis alltid viser same tal og same passord som dr-grimen.github.io/sondres-scheme-app.
+const DATA = (typeof location !== 'undefined' && /\/trading\//.test(location.pathname))
+  ? 'https://dr-grimen.github.io/sondres-scheme-app/data/' : 'data/';
 const nøkkelCache = new Map();
 const NØKKEL_LAGER = 'scheme_passfrase';
 let passfrase = null;
@@ -43,14 +47,14 @@ export async function last(namn, { fersk = false } = {}) {
   if (!fersk && cache.has(namn)) return cache.get(namn);
   let data = null;
   let r = null;
-  try { r = await fetch(`data/${namn}.json`, { cache: 'no-store' }); } catch (e) { r = null; }
+  try { r = await fetch(`${DATA}${namn}.json`, { cache: 'no-store' }); } catch (e) { r = null; }
   if (r && r.ok) {
     const tekst = await r.text();
     try { data = JSON.parse(tekst); } catch (e) { data = null; }   // GitHub Pages gir HTML-404 med 200 på nokre stiar
   }
   if (data === null) {
     let e = null;
-    try { e = await fetch(`data/${namn}.json.enc`, { cache: 'no-store' }); } catch (err) { e = null; }
+    try { e = await fetch(`${DATA}${namn}.json.enc`, { cache: 'no-store' }); } catch (err) { e = null; }
     if (e && e.ok) {
       let env = null;
       try { env = await e.json(); } catch (err) { env = null; }

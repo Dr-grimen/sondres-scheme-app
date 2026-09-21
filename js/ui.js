@@ -138,8 +138,10 @@ export function aktivitetslogg(tilstand, tankar, no = Date.now()) {
 export function Topp({ tilstand, tittel, tankar }) {
   const m = (tilstand && tilstand.modus) || 'PAPIR';
   const a = aktivitetslogg(tilstand, tankar);
-  const tal = a.harRegister ? `${a.registrerte} av ${a.totalt} registrerte agentar` : `${a.logga} agentar`;
-  const tekst = a.dag ? `${a.fersk ? 'DAGSLOGG' : 'ELDRE LOGG'} · ${a.dag} UTC · ${a.fullLogg ? '' : 'minst '}${tal}${a.historiske ? ` + ${a.historiske} historiske` : ''} · sist ${alderTekst(a.siste)}` : 'INGEN DAGSLOGG · ventar på første køyring';
+  // Rullande døgn (eksporten tel alle som har logga noko dei siste 24 timane). Botflåten har vakt éin gong
+  // i døgnet, så kalenderdag viste «29 av 479» heilt til kvelden sjølv om alle nettopp hadde jobba.
+  const tal = a.harRegister ? `${a.registrerte} av ${a.totalt} agentar har jobba siste døgn` : `${a.logga} agentar`;
+  const tekst = a.dag ? `${a.fersk ? 'LIVE' : `ELDRE LOGG · ${a.dag} UTC`} · ${a.fullLogg ? '' : 'minst '}${tal} · sist ${alderTekst(a.siste)}` : 'INGEN LOGG · ventar på første køyring';
   return html`<header class="topp">
     <h1>Sondres scheme <small>${tittel}</small></h1>
     <span class="modus modus-${m}" title="Handelsinnstilling, ikkje stadfesting av kontokopling eller utførte ordre">${m}</span>

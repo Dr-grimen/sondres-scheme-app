@@ -31,7 +31,7 @@
    gammal kode i det uendelege: Sondre såg «12 av 36 agentar» medan data sa 35, fordi tala var
    nye og koden gammal (9. sep 2026). No blir det leita etter ny versjon ved kvar opning, og
    når ein ny service worker tek over, lastar sida seg om éin gong av seg sjølv. */
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !/\/trading\//.test(location.pathname)) {   // inni Jarvis: Jarvis har sin eigen
   let lastarOm = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (lastarOm) return;                       // berre éin gong, aldri ei løkke

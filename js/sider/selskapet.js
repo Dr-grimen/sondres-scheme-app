@@ -6,8 +6,8 @@ import { last } from '../data.js';
    i arbitrasjemotoren i Zurich. Tala kjem frå motoren sjølv. */
 const ROLLE = { kalshi: 'Kalshi-speidar', polymarket: 'Polymarket-speidar', koplar: 'Koplar' };
 const OPPGÅVE = {
-  kalshi: 'Hentar JA- og NEI-prisane på sin del av Kalshi-marknadene kvart 2. sekund.',
-  polymarket: 'Hentar ordrebøkene på sin del av Polymarket-tokena kvart 2. sekund.',
+  kalshi: 'Får JA- og NEI-prisane på sin del av Kalshi-marknadene pusha same augneblink dei endrar seg.',
+  polymarket: 'Får ordrebøkene på sin del av Polymarket-tokena pusha same augneblink dei endrar seg.',
   koplar: 'Eig ein del av dei like para og reknar JA + NEI + gebyr. Under 1 dollar = moglegheit.',
 };
 

@@ -36,7 +36,7 @@ export function Oversikt({ tilstand }) {
       ${a ? html`
         <div class="tal">
           <${Flis} tekst=${t.tekst} kl=${t.kl} l="ekte handel" />
-          <${Flis} v=${a.par} l="like par skanna kvart 2. sek" />
+          <${Flis} v=${a.par} l=${a.straum ? 'like par · prisane blir pusha straks' : 'like par skanna kvart 2. sek'} />
           <${Flis} v=${a.låst_gevinst} des=${2} l=${`låst gevinst (${fmt(a.opne || 0)} opne)`} kl="cyan" />
           <${Flis} v=${a.tent} des=${2} l="tent, gjort opp (USD)" kl=${(a.tent || 0) >= 0 ? 'gron' : 'raud'} />
         </div>

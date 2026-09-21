@@ -43,7 +43,7 @@ export function Arbitrase() {
         <${Flis} v=${opp.kalshi_marknader} l="Kalshi-marknader lesne" />
       </div>
       ${d.pause ? html`<p class="feil">PAUSE: ${d.pause.grunn} (${dato(d.pause.ts)}). Motoren handlar ikkje før brytaren blir slått på att.</p>` : null}
-      <p class="stille">Nye kampar blir henta kvart 5. minutt (sist ${fmt(opp.sek, 1)} s), prisane kvart 2. sekund. ${fmt(opp.poly_marknader)} Polymarket-marknader og ${fmt(opp.kalshi_kampar)} Kalshi-kampar i siste oppdaging.</p>
+      <p class="stille">Nye kampar blir henta kvart 5. minutt (sist ${fmt(opp.sek, 1)} s), prisane blir pusha straks dei endrar seg (full kontroll kvart 30. sekund). ${fmt(opp.poly_marknader)} Polymarket-marknader og ${fmt(opp.kalshi_kampar)} Kalshi-kampar i siste oppdaging.</p>
     </section>
 
     <section class="kort"><h2>Pengane <small>lesne av motoren ${alderTekst(sal.ts)}</small></h2>

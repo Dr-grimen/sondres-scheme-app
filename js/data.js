@@ -3,6 +3,7 @@
    GitHub Pages, låst opp med ein passfrase som ligg i nettlesaren etter fyrste gong. */
 
 const cache = new Map();
+const nøkkelCache = new Map();
 const NØKKEL_LAGER = 'scheme_passfrase';
 let passfrase = null;
 try { passfrase = localStorage.getItem(NØKKEL_LAGER); } catch (e) { passfrase = null; }
@@ -11,7 +12,7 @@ export class TrengPassfrase extends Error { constructor(m) { super(m || 'treng p
 export class FeilPassfrase extends Error { constructor() { super('feil passfrase'); this.name = 'FeilPassfrase'; } }
 
 export function harPassfrase() { return !!passfrase; }
-export function setPassfrase(p) { passfrase = p || null; try { if (p) localStorage.setItem(NØKKEL_LAGER, p); else localStorage.removeItem(NØKKEL_LAGER); } catch (e) { /* privat modus */ } cache.clear(); }
+export function setPassfrase(p) { passfrase = p || null; try { if (p) localStorage.setItem(NØKKEL_LAGER, p); else localStorage.removeItem(NØKKEL_LAGER); } catch (e) { /* privat modus */ } cache.clear(); nøkkelCache.clear(); }
 
 const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
@@ -22,9 +23,8 @@ async function nøkkel(pass, salt, iter) {
     { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
 }
 
-const nøkkelCache = new Map();
 async function dekrypter(env, pass) {
-  const id = `${env.salt}|${env.iter}`;
+  const id = `${pass}|${env.salt}|${env.iter}`;   // nytt passord (eller ein skrivefeil) må aldri gjenbruke gammal nøkkel
   let k = nøkkelCache.get(id);
   if (!k) { k = await nøkkel(pass, b64(env.salt), env.iter || 600000); nøkkelCache.set(id, k); }
   let klar;

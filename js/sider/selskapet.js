@@ -8,7 +8,8 @@ export function Selskapet({ tilstand }) {
   const [t, setT] = useState(undefined);
   const [sel, setSel] = useState(undefined);
   const [vald, setVald] = useState(null);
-  useEffect(() => { last('tankar').then(setT); last('selskap').then(setSel); }, []);
+  const [verda, setVerda] = useState(null);
+  useEffect(() => { last('tankar').then(setT); last('selskap').then(setSel); last('verda').then(setVerda).catch(() => setVerda(null)); }, []);
   const agentar = (tilstand && tilstand.agentar) || [];
   const faste = agentar.filter((a) => !a.bot && !String(a.namn || '').startsWith('bot_'));
   const botter = agentar.filter((a) => a.bot || String(a.namn || '').startsWith('bot_'));
@@ -46,6 +47,19 @@ export function Selskapet({ tilstand }) {
   return html`
     <div class="fase">>>> SELSKAPET // ${faste.length} FASTE + ${botter.length} BOTTER = ${totalt} · ${aktivitet.fullLogg ? '' : 'MINST '}${nPaaJobb} REGISTRERTE I LOGGEN ${loggdag}${aktivitet.dag ? ' UTC' : ''}${aktivitet.historiske ? ` + ${aktivitet.historiske} HISTORISKE` : ''} · ${nTankar} INNLEGG</div>
     <p class="stille" style="margin:-6px 0 10px">Oppdraga over er gjeldande oppsett. Aktiviteten nedanfor kjem frå den daterte dagsloggen; nye oppdrag betyr ikkje at agentane alt har køyrt dei. ${aktivitet.siste ? `Siste loggføring: ${dato(aktivitet.siste)} (${alderTekst(aktivitet.siste)}).` : 'Ingen loggføring er tilgjengeleg.'} Loggføring kan òg gjelde feil og venting.</p>
+    ${verda && verda.n_kontoar ? html`<section class="kort" style="border-color:rgba(52,211,153,.45)">
+      <h2>Verda <small>kvar bot har sin eigen konto · leikepengar, ekte prisar og oppgjer</small></h2>
+      <div class="flis-rad">
+        <${Flis} tekst=${verda.ceo ? verda.ceo.agent : 'vel etter 3 dagar'} l=${verda.ceo ? `CEO til ${dato(verda.ceo.til)} · ${fmt(100 * verda.ceo.avkastning, 1)} %` : 'ingen CEO før botane har handla i 3 dagar'} kl="gron" />
+        <${Flis} v=${verda.n_kontoar} l="botar med eigen konto" />
+        <${Flis} tekst=${`${fmt(verda.samla_eigenkapital, 2)} / ${fmt(verda.samla_start, 0)} USD`} l="samla i verda (leikepengar)" kl=${verda.samla_eigenkapital >= verda.samla_start ? 'gron' : 'raud'} />
+        <${Flis} tekst=${verda.marknader ? `${fmt(verda.marknader.kalshi)} + ${fmt(verda.marknader.polymarket)}` : '–'} l="marknader med kurs (Kalshi + Polymarket)" />
+      </div>
+      <div class="scroll"><table><thead><tr><th>Plass</th><th>Bot</th><th>Plattform</th><th class="r">Avkastning</th><th class="r">Konto</th><th class="r">Handlar</th><th class="r">Opne</th><th>Strategi</th></tr></thead><tbody>
+        ${(verda.topp || []).map((r, i) => html`<tr class=${verda.ceo && r.agent === verda.ceo.agent ? 'fremja' : ''}><td class="r">${i + 1}</td><td>${P(r.agent)} <small class="stille">${r.agent}</small></td><td>${r.plattform}</td><td class="r ${r.avkastning > 0 ? 'opp' : (r.avkastning < 0 ? 'ned' : '')}">${fmt(100 * (r.avkastning || 0), 1)} %</td><td class="r">${fmt(r.eigenkapital, 2)}</td><td class="r">${fmt(r.handlar)}</td><td class="r">${fmt(r.opne)}</td><td class="stille">${r.genom ? `${r.genom.side} ${r.genom.pmin}–${r.genom.pmax}, ≤${r.genom.maks_dagar} d` : ''}</td></tr>`)}
+      </tbody></table></div>
+      ${(verda.historikk || []).length ? html`<p class="stille">Siste skifte: ${verda.historikk[verda.historikk.length - 1].ceo} vart CEO, ${(verda.historikk[verda.historikk.length - 1].klona || []).length} svake botar fekk genomet hans.</p>` : html`<p class="stille">Kvar tredje dag blir den beste CEO, og dei ti svakaste får genomet hans med ei lita endring.</p>`}
+    </section>` : null}
     <section class="kort"><h2>Siste dokumenterte vakt</h2>
       ${vakt ? html`
         <p>${vaktNamn[vakt.kommando] || vakt.kommando} · start ${dato(vakt.started_at)} · ${vakt.finished_at ? `slutt ${dato(vakt.finished_at)} (${alderTekst(vakt.finished_at)})` : 'køyringa er ikkje registrert ferdig'}</p>

@@ -1,52 +1,104 @@
 import { useEffect, useState } from 'preact/hooks';
-import { html, Flis, Tom, fmt, dato } from '../ui.js';
+import { html, Flis, Tom, fmt, dato, alderTekst } from '../ui.js';
 import { last } from '../data.js';
 
-const STATUS = {treng_regelkontroll: 'Treng regelkontroll', avvist: 'Avvist', papirkandidat: 'Papirkandidat'};
-const PARSTATUS = {conditional_paper_candidate: 'Vilkårsbunden papirkandidat', open_paper_position: 'Alt open på papir', simulated_pair_opened: 'Simulert par opna', rejected: 'Avvist'};
+/* Arbitrasje (Sondre 21. sep 2026): kjøp JA på éi plattform og NEI på den andre på same hending når summen
+   med gebyr er under 1 USD. Alt her kjem frå motoren på serveren i Zurich (results/arb/status.json). */
+
+const RETNING = { A: 'JA på Kalshi + NEI på Polymarket', B: 'JA på Polymarket + NEI på Kalshi' };
+const STATUS = {
+  open: 'Kjøpt – gevinsten er låst', gjort_opp: 'Ferdig – gjort opp', einsleg_bein_avvikla: 'Berre éi side – selt att',
+  einsleg_bein_OPE: 'Berre éi side – STÅR OPEN', ukjend_kalshi: 'Uvisst svar frå Kalshi', ukjend_poly: 'Uvisst svar frå Polymarket',
+  avbroten_midt_i_handel: 'Avbroten midt i', ikkje_fylt: 'Ikkje fylt', avbrote: 'Avbrote',
+};
+
+export function motorTilstand(a) {
+  if (!a) return { tekst: 'INGEN STATUS', kl: 'raud' };
+  if (a.pause) return { tekst: 'PAUSE', kl: 'raud' };
+  return a.live ? { tekst: 'PÅ', kl: 'gron' } : { tekst: 'AV', kl: '' };
+}
 
 export function Arbitrase() {
-  const [data, setData] = useState(undefined);
-  useEffect(() => { last('arbitrase').then(setData); }, []);
-  if (data === undefined) return html`<div class="lastar mono">>>> LASTAR …</div>`;
-  const a = data && data.snapshot;
-  if (!a) return html`<div class="fase">>>> ARBITRASE // POLYMARKET + KALSHI</div><${Tom} tekst="Ingen lagra samanlikning enno." />`;
-  const gammal = a.fresh === false || !a.generert || Date.now() - new Date(a.generert).getTime() > 6 * 3600 * 1000;
-  const rader = a.kandidatar || [];
-  const dekning = a.dekning || {};
-  const complete = a.complete_set || {};
-  const papir = complete.paper || {};
+  const [d, setD] = useState(undefined);
+  useEffect(() => { last('arbitrase').then(setD).catch(() => setD(null)); }, []);
+  if (d === undefined) return html`<div class="lastar mono">>>> LASTAR …</div>`;
+  if (!d || !d.finst) return html`<div class="fase">>>> ARBITRASJE // KALSHI ↔ POLYMARKET</div><${Tom} tekst="Ingen status frå motoren enno – kjem ved neste skykøyring." />`;
+  const t = motorTilstand(d);
+  const sal = d.saldo || {};
+  const hyller = sal.kalshi_hyller || {};
+  const opp = d.oppdaging || {};
+  const bot = d.botar || {};
+  const tal = bot.tal || {};
+  const avviste = Object.entries(d.avviste_grunnar || {}).sort((x, y) => y[1] - x[1]);
+  const godkjende = (d.ligaer || []).filter((l) => l.godkjent);
+  const avviste_ligaer = (d.ligaer || []).filter((l) => !l.godkjent);
   return html`
-    <div class="fase">>>> ARBITRASE // PAPIR OG UNDERSØKING</div>
-    <section class="kort"><h2>Polymarket + Kalshi <small>${dato(a.generert)} · ${a.status || 'ukjend status'}</small></h2>
-      ${gammal ? html`<p class="feil">Dette er eit eldre uttrekk. Prisane er ikkje stadfesta no.</p>` : null}
+    <div class="fase">>>> ARBITRASJE // KALSHI ↔ POLYMARKET · MOTOREN I ZURICH</div>
+
+    <section class="kort"><h2>Motoren <small>status ${alderTekst(d.ts)} · henta ${dato(d.henta)}</small></h2>
       <div class="tal">
-        <${Flis} v=${a.marknader_polymarket} l="Polymarket-marknader lesne" />
-        <${Flis} v=${a.marknader_kalshi} l="Kalshi-marknader lesne" />
-        <${Flis} v=${a.observerte_par} l="par samanlikna" />
-        <${Flis} v=${(a.papir || {}).simulerte} l="par simulerte på papir" />
+        <${Flis} tekst=${t.tekst} kl=${t.kl} l="ekte handel" />
+        <${Flis} v=${d.par} l="like par skanna" />
+        <${Flis} v=${(tal.kalshi || 0) + (tal.polymarket || 0) + (tal.koplar || 0)} l=${`botar (${fmt(bot.aktive)} aktive)`} />
+        <${Flis} v=${opp.kalshi_marknader} l="Kalshi-marknader lesne" />
       </div>
-      <p class="stille">${Object.entries(dekning).map(([k, v]) => `${k}: ${v.status || 'ukjend status'}, ${v.complete ? 'til siste API-side' : 'avgrensa dekning'}`).join(' · ') || 'Dekning ikkje oppgitt.'}</p>
-      <p>Like overskrifter er berre eit søkjetreff. Oppgjersreglar, fristar og kva som tel som eit ja må vere like før to kontraktar kan behandlast som same utfall.</p>
-      <p class="stille">Netto er etter dei kostnadene som faktisk er kjende. «Ukjent» betyr at gebyr eller kjøpsprisar ikkje er stadfesta. Prisindikasjonar og papirpar er ikkje ordre, parvise fyllingar eller dokumentert forteneste.</p>
+      ${d.pause ? html`<p class="feil">PAUSE: ${d.pause.grunn} (${dato(d.pause.ts)}). Motoren handlar ikkje før brytaren blir slått på att.</p>` : null}
+      <p class="stille">Nye kampar blir henta kvart 5. minutt (sist ${fmt(opp.sek, 1)} s), prisane kvart 2. sekund. ${fmt(opp.poly_marknader)} Polymarket-marknader og ${fmt(opp.kalshi_kampar)} Kalshi-kampar i siste oppdaging.</p>
     </section>
-    <section class="kort"><h2>Par til vurdering <small>${rader.length} i uttrekket</small></h2>
-      ${rader.length ? html`<div class="scroll"><table><thead><tr><th>Polymarket / Kalshi</th><th>Retning</th><th class="r">Brutto / kontrakt</th><th class="r">Netto / kontrakt</th><th>Status og grunn</th></tr></thead><tbody>
-        ${rader.map((r) => html`<tr><td class="status"><b>${r.polymarket_question}</b><br />${r.kalshi_question}<br /><small>${r.kalshi_ticker}</small></td><td>${r.retning || '–'}</td><td class="r">${r.brutto_per_kontrakt == null ? 'ukjent' : fmt(r.brutto_per_kontrakt, 4)}</td><td class="r">${r.netto_per_kontrakt == null ? 'ukjent' : fmt(r.netto_per_kontrakt, 4)}</td><td class="status"><b>${STATUS[r.status] || r.status}</b><br />${(r.grunn || []).join(' · ')}</td></tr>`)}
-      </tbody></table></div>` : html`<${Tom} tekst="Ingen par til vurdering i denne køyringa." />`}
-      ${Object.keys(a.forkasta || {}).length ? html`<details style="margin-top:10px"><summary>Kva som vart forkasta</summary><ul>${Object.entries(a.forkasta).map(([k, n]) => html`<li>${k}: ${fmt(n)}</li>`)}</ul></details>` : null}
+
+    <section class="kort"><h2>Pengane <small>lesne av motoren ${alderTekst(sal.ts)}</small></h2>
+      <div class="tal">
+        <${Flis} v=${sal.kalshi} des=${2} l="Kalshi (USD)" />
+        <${Flis} v=${sal.polymarket} des=${2} l="Polymarket (pUSD)" />
+        <${Flis} v=${d.låst_gevinst} des=${2} l=${`låst gevinst i ${fmt(d.opne || 0)} opne`} kl="cyan" />
+        <${Flis} v=${d.tent} des=${2} l="tent (gjort opp)" kl=${(d.tent || 0) >= 0 ? 'gron' : 'raud'} />
+      </div>
+      ${Object.keys(hyller).length ? html`<p class="stille">Kalshi-hyller: ${Object.entries(hyller).map(([k, v]) => `hylle ${k}: ${fmt(v, 2)} USD`).join(' · ')}. Tennis, MLB og WNBA ligg på hylle 3; NFL, NHL og fotball på hylle 0. Motoren handlar berre der pengane ligg.</p>` : null}
     </section>
-    <section class="kort"><h2>Polymarket · ja og nei i same marknad <small>${dato(complete.ts)}</small></h2>
-      <p class="stille">Begge utfall blir vurderte frå ordrebokdjupn. Rekninga inkluderer dei oppgitte gebyra og avsetjing for prisrørsle, kapitalbinding og oppgjer. Ein kandidat er vilkårsbunden; kjøp av begge sider er berre simulert.</p>
-      <div class="tal"><${Flis} v=${complete.evaluated_markets} l="marknader faktisk vurderte" /><${Flis} v=${complete.eligible_markets} l="marknader i utvalet" /><${Flis} v=${papir.simulated_fills_this_run} l="nye simulerte par" /><${Flis} v=${papir.open_positions} l="opne papirpar" /></div>
-      ${(complete.errors || []).length ? html`<p class="feil">${complete.errors.join(' · ')}</p>` : null}
-      ${(complete.candidates || []).length ? html`<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Marknad</th><th>Status</th><th class="r">Mengd</th><th class="r">Nettoestimat / par</th><th class="r">Samla modellestimat</th><th class="r">Kapital</th><th>Grunn</th></tr></thead><tbody>
-        ${complete.candidates.map((r) => html`<tr><td class="status">${r.question || r.market_id}</td><td>${PARSTATUS[r.status] || r.status}</td><td class="r">${fmt(r.quantity)}</td><td class="r">${r.net_per_pair == null ? 'ukjent' : fmt(r.net_per_pair, 4)}</td><td class="r">${r.modeled_net_total == null ? 'ukjent' : fmt(r.modeled_net_total, 2)}</td><td class="r">${fmt(r.capital_required, 2)}</td><td class="status">${(r.reasons || []).join(' · ') || 'Vilkår og samtidige kjøp må halde.'}</td></tr>`)}
-      </tbody></table></div>` : html`<${Tom} tekst="Ingen par er vurderte i dette uttrekket." />`}
-      <h3>Papirrekneskap · ${papir.currency || 'eining ikkje oppgitt'}</h3>
-      <div class="tal"><${Flis} v=${papir.reserved_capital} des=2 l="bunden papirkapital" /><${Flis} v=${papir.equity_indicative} des=2 l="indikativ papirverdi" /><${Flis} v=${papir.unrealized_pnl} des=2 l="urealisert papirresultat" /><${Flis} v=${papir.simulated_realized_pnl} des=2 l="bokført simulert resultat" /></div>
-      <p class="stille">${fmt(papir.awaiting_verified_resolution)} par ventar på kontrollert oppgjer. ${fmt(papir.stale_positions)} har forelda verdsetjing. Verkeleg forteneste er ikkje målt. Modellert sluttverdi blir ikkje ført som realisert gevinst.</p>
-      ${complete.stop_reason ? html`<p class="stille">Grunn til avslutta skann: ${complete.stop_reason}</p>` : null}
+
+    <section class="kort"><h2>Beste skilnader akkurat no <small>netto etter gebyr, per par</small></h2>
+      ${(d.tilbod || []).length ? html`<div class="scroll"><table class="tabell">
+        <tr><th>Kamp</th><th>Kjøp</th><th>Sum</th><th>Netto</th><th>Avkastning</th><th>Djupn</th><th>Start</th></tr>
+        ${d.tilbod.slice(0, 15).map((x) => html`<tr>
+          <td>${x.kamp}<br /><small class="stille">${x.utfall} · ${x.serie || x.sport}</small></td>
+          <td><small>${RETNING[x.retning] || x.retning}</small></td>
+          <td class="mono">${fmt(x.k_ask + x.p_ask, 3)}</td>
+          <td class="mono ${x.netto_per > 0 ? 'opp' : 'ned'}">${fmt(x.netto_per * 100, 1)} c</td>
+          <td class="mono">${fmt((x.avkastning || 0) * 100, 1)} %</td>
+          <td class="mono">${fmt(x.tal_topp)}</td>
+          <td><small>${dato(x.start)}</small></td></tr>`)}
+      </table></div>` : html`<${Tom} tekst="Ingen par gir meir enn 1 cent netto akkurat no. Slik er det mesteparten av tida." />`}
+      ${(d.ville_handla || []).length ? html`<p><b>Oppfyller alle vilkåra no:</b> ${d.ville_handla.map((v) => `${v.kamp} (${fmt(v.netto_per * 100, 1)} c)`).join(' · ')}</p>` : null}
+      ${avviste.length ? html`<p class="stille">Avviste no: ${avviste.map(([g, n]) => `${g} (${n})`).join(' · ')}</p>` : null}
     </section>
-    <section class="kort"><h2>Trading.com · eigne retningsstrategiar</h2><p class="stille">CFD-ar følgjer ein pris og er ikkje det same som ja/nei-kontraktar. Dei blir vurderte separat og tel ikkje som risikofri arbitrasje mellom desse plattformene.</p></section>`;
+
+    <section class="kort"><h2>Handlar <small>siste 30 frå motoren si bok</small></h2>
+      ${(d.handlar || []).length ? html`<div class="scroll"><table class="tabell">
+        <tr><th>Tid</th><th>Kamp</th><th>Status</th><th>Par</th><th>Kost</th><th>Gevinst</th></tr>
+        ${[...d.handlar].reverse().map((h) => html`<tr>
+          <td><small>${dato(h.ts)}</small></td>
+          <td>${h.kamp}<br /><small class="stille">${RETNING[h.retning] || ''}</small></td>
+          <td><small>${STATUS[h.status] || h.status}${h.må_hentast ? ' · trykk «Claim» i Polymarket' : ''}</small></td>
+          <td class="mono">${fmt(h.tal)}</td>
+          <td class="mono">${fmt(h.kost, 2)}</td>
+          <td class="mono ${((h.gevinst ?? h.forventa_gevinst) || 0) >= 0 ? 'opp' : 'ned'}">${h.gevinst != null ? fmt(h.gevinst, 2) : (h.forventa_gevinst != null ? `${fmt(h.forventa_gevinst, 2)} (låst)` : '–')}</td></tr>`)}
+      </table></div>` : html`<${Tom} tekst="Ingen handlar enno." />`}
+    </section>
+
+    <section class="kort"><h2>Slik fungerer det</h2>
+      <p>${d.ordre || ''}</p>
+      <p class="stille">Døme: JA til 0,40 på Kalshi og motsett side til 0,55 på Polymarket kostar 0,95 + gebyr. Eitt av dei betaler alltid 1,00 – same kva lag som vinn. 0,51 + 0,51 = 1,02 er tap, uansett utfall.</p>
+      <p class="stille">Risiko: avlyste eller utsette kampar kan gjerast opp ulikt (Kalshi «fair price», Polymarket 50-50). Difor må Kalshi-sida vere favoritten, og berre ligaer der reglane er lesne side om side blir handla. Blir berre éi side kjøpt, sel motoren henne att og set seg på pause.</p>
+    </section>
+
+    <section class="kort"><h2>Ligaer <small>${godkjende.length} godkjende · ${avviste_ligaer.length} avviste</small></h2>
+      <div class="scroll"><table class="tabell">
+        <tr><th>Liga (Kalshi-serie)</th><th>Status</th><th>Min. netto</th><th>Kvifor</th></tr>
+        ${[...godkjende, ...avviste_ligaer].map((l) => html`<tr>
+          <td class="mono"><small>${l.serie}</small></td>
+          <td><small class=${l.godkjent ? 'opp' : 'ned'}>${l.godkjent ? 'godkjend' : 'avvist'}</small></td>
+          <td class="mono">${l.min_netto != null ? `${fmt(l.min_netto * 100, 1)} c` : '–'}</td>
+          <td><small class="stille">${l.grunn || ''}</small></td></tr>`)}
+      </table></div>
+    </section>`;
 }

@@ -34,7 +34,6 @@ function rute() {
 function App() {
   const [r, setR] = useState(rute());
   const [tilstand, setTilstand] = useState(undefined);
-  const [tankar, setTankar] = useState(null);
   const [laas, setLaas] = useState(null);   // 'treng' | 'feil' | null
   const [feil, setFeil] = useState(null);
   const sistGenerert = useRef(null);
@@ -51,7 +50,6 @@ function App() {
       setFeil(null);
       setTilstand(t);
       setLaas(null);
-      setTankar(await last('tankar', { fersk: true }));
     } catch (e) {
       if (e instanceof TrengPassfrase) setLaas('treng');
       else if (e instanceof FeilPassfrase) { setLaas('feil'); }
@@ -69,12 +67,11 @@ function App() {
   return html`
     <${Nav} side=${r.side} />
     <main class="ramme">
-      <${Topp} tilstand=${tilstand} tittel=${tittel} tankar=${tankar} />
-      ${tilstand && tilstand.kill_switch ? html`<div class="varsel">KILL-SWITCH UTLØYST i papirboka. Kontostatus hos meklaren må kontrollerast separat.</div>` : null}
-      ${tilstand && tilstand.modus === 'EKTE' ? html`<div class="varsel">INNSTILLING FOR EKTE HANDEL. Sjå Meklarar for stadfesta kontostatus.</div>` : null}
+      <${Topp} tilstand=${tilstand} tittel=${tittel} />
+      ${tilstand && tilstand.arb && tilstand.arb.pause ? html`<div class="varsel">ARBITRASJEN STÅR PÅ PAUSE: ${tilstand.arb.pause.grunn}. Slå på att med brytaren når det er sjekka.</div>` : null}
       ${feil ? html`<div class="varsel">Kunne ikkje lese data: ${feil}</div>` : null}
       ${tilstand === undefined ? html`<div class="lastar mono">>>> LASTAR TILSTAND …</div>` : html`<${Side} key=${`${r.side}:${(tilstand || {}).generert || "tom"}`} tilstand=${tilstand} arg=${r.arg} />`}
-      <footer>${tilstand ? `tilstand generert ${new Date(tilstand.generert).toLocaleString('nb-NO')} · alle tal frå filer i repoet · ingen lovnad om avkastning` : 'ingen tilstand enno'}
+      <footer>${tilstand ? `tilstand generert ${new Date(tilstand.generert).toLocaleString('nb-NO')} · alle tal frå motoren og kontoane · ingen lovnad om avkastning` : 'ingen tilstand enno'}
         ${harPassfrase() ? html` · <a href="#" onClick=${(e) => { e.preventDefault(); setPassfrase(null); location.reload(); }}>lås</a>` : null}</footer>
     </main>`;
 }

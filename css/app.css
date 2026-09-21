@@ -166,3 +166,10 @@ pre.rapport { white-space: pre-wrap; word-break: break-word; font: 12px/1.5 var(
 details summary { cursor: pointer; color: var(--tekst2); font-size: 13px; }
 .spinn { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--kant); border-top-color: var(--cyan); border-radius: 50%; animation: spinn 1s linear infinite; vertical-align: middle; }
 @keyframes spinn { to { transform: rotate(360deg); } }
+
+/* Tabellar på arbitrasjesida */
+.scroll { overflow-x: auto; }
+.tabell { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabell th { text-align: left; font: 600 10px/1.2 var(--mono); letter-spacing: .1em; color: var(--dempa); text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--kant); }
+.tabell td { padding: 7px 8px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top; }
+.tabell td small { font-size: 11px; }

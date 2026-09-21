@@ -8,22 +8,10 @@ export const html = htm.bind(h);
 
 export const SIDER = [
   { id: 'oversikt', namn: 'Oversikt', ik: '◎' },
-  { id: 'hjernen', namn: 'Hjernen', ik: '✦' },
-  { id: 'provebane', namn: 'Prøvebane', ik: '⁘' },
-  { id: 'avl', namn: 'Avl', ik: '⌇' },
-  { id: 'eksamen', namn: 'Eksamen', ik: '✓' },
-  { id: 'stresslab', namn: 'Stresslab', ik: '⚡' },
-  { id: 'skann', namn: 'Skann', ik: '⌖' },
-  { id: 'arbitrase', namn: 'Arbitrase', ik: '⇌' },
-  { id: 'nivaa', namn: 'Nivå', ik: '≡' },
-  { id: 'varsel', namn: 'Varsel', ik: '!' },
-  { id: 'kunnskap', namn: 'Kunnskap', ik: '📚' },
-  { id: 'meklarar', namn: 'Meklarar', ik: '⇄' },
+  { id: 'arbitrase', namn: 'Arbitrasje', ik: '⇌' },
+  { id: 'selskapet', namn: 'Botane', ik: '▣' },
+  { id: 'meklarar', namn: 'Kontoar', ik: '⇄' },
   { id: 'uttak', namn: 'Uttak', ik: '⇣' },
-  { id: 'rapportar', namn: 'Rapportar', ik: '▦' },
-  { id: 'selskapet', namn: 'Selskapet', ik: '▣' },
-  { id: 'turnering', namn: 'Turnering', ik: '≋' },
-  { id: 'papir', namn: 'Papir', ik: '▤' },
   { id: 'sanning', namn: 'Sanning', ik: '◇' },
 ];
 
@@ -135,24 +123,25 @@ export function aktivitetslogg(tilstand, tankar, no = Date.now()) {
     fersk: dag === new Date(no).toISOString().slice(0, 10) && alder !== null && alder >= -300000 && alder <= 3 * 3600000 };
 }
 
-export function Topp({ tilstand, tittel, tankar }) {
-  const m = (tilstand && tilstand.modus) || 'PAPIR';
-  const a = aktivitetslogg(tilstand, tankar);
-  // Rullande døgn (eksporten tel alle som har logga noko dei siste 24 timane). Botflåten har vakt éin gong
-  // i døgnet, så kalenderdag viste «29 av 479» heilt til kvelden sjølv om alle nettopp hadde jobba.
-  const tal = a.harRegister ? `${a.registrerte} av ${a.totalt} agentar har jobba siste døgn` : `${a.logga} agentar`;
-  const tekst = a.dag ? `${a.fersk ? 'LIVE' : `ELDRE LOGG · ${a.dag} UTC`} · ${a.fullLogg ? '' : 'minst '}${tal} · sist ${alderTekst(a.siste)}` : 'INGEN LOGG · ventar på første køyring';
+export function Topp({ tilstand, tittel }) {
+  // Sida handlar berre om arbitrasje (Sondre 21. sep 2026): toppen viser motoren i Zurich, ikkje dei gamle agentane.
+  const a = tilstand && tilstand.arb;
+  const botar = a && a.botar && a.botar.tal ? Object.values(a.botar.tal).reduce((x, y) => x + y, 0) : 480;
+  const fersk = a && a.ts && Date.now() - new Date(a.ts).getTime() < 3 * 3600 * 1000;
+  const modus = !a ? 'INGEN STATUS' : (a.pause ? 'PAUSE' : (a.live ? 'EKTE' : 'AV'));
+  const tekst = a ? `${a.pause ? 'PAUSE' : (a.live ? 'ARBITRASJE PÅ' : 'ARBITRASJE AV')} · ${botar} botar skannar ${fmt(a.par)} like par · status ${alderTekst(a.ts)}`
+    : 'INGEN STATUS FRÅ MOTOREN ENNO';
   return html`<header class="topp">
     <h1>Sondres scheme <small>${tittel}</small></h1>
-    <span class="modus modus-${m}" title="Handelsinnstilling, ikkje stadfesting av kontokopling eller utførte ordre">${m}</span>
-    <span class="live ${a.fersk ? '' : 'stille'}" title="Faktisk loggføring den oppgitte UTC-dagen, samanlikna med dagens agentregister. Ein logg kan òg innehalde feil og venting; han er ikkje bevis på vellukka arbeid. Eldre logg betyr at siste innlegg er meir enn tre timar gamalt eller frå ein tidlegare dag.">
+    <span class="modus modus-${modus === 'EKTE' ? 'EKTE' : 'PAPIR'}" title="Ekte handel er på når brytaren er slått på og motoren ikkje står på pause">${modus}</span>
+    <span class="live ${fersk ? '' : 'stille'}" title="Status frå arbitrasjemotoren på serveren i Zurich, henta av skya">
       <span class="prikk"></span> ${tekst}</span>
   </header>`;
 }
 
 export function Nav({ side }) {
   return html`<nav class="nav">
-    <div class="logo">SONDRES SCHEME<small>VERD · HJERNE · SELSKAP</small></div>
+    <div class="logo">SONDRES SCHEME<small>ARBITRASJE · KALSHI ↔ POLYMARKET</small></div>
     ${SIDER.map((s) => html`<a href=${'#/' + s.id} class=${side === s.id ? 'aktiv' : ''}><span class="ik">${s.ik}</span><span>${s.namn.toUpperCase()}</span></a>`)}
   </nav>`;
 }

@@ -147,7 +147,7 @@ export function Topp({ tilstand, tittel }) {
   return html`<header class="topp">
     <h1>Sondres scheme <small>${tittel}</small></h1>
     <span class="modus modus-${modus === 'EKTE' ? 'EKTE' : 'PAPIR'}" title="Ekte handel er på når brytaren er slått på og motoren ikkje står på pause">${modus}</span>
-    <span class="live ${fersk ? '' : 'stille'}" title="Status frå arbitrasjemotoren på serveren i Zurich; nettsida blir oppdatert kvart femte minutt">
+    <span class="live ${fersk ? '' : 'stille'}" title="Status frå arbitrasjemotoren på serveren i Zurich; nettsida blir oppdatert kvar sjette time">
       <span class="prikk"></span> ${tekst}</span>
   </header>`;
 }

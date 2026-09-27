@@ -9,7 +9,7 @@ export const html = htm.bind(h);
 export const SIDER = [
   { id: 'oversikt', namn: 'Oversikt', ik: '◎' },
   { id: 'arbitrase', namn: 'Arbitrasje', ik: '⇌' },
-  { id: 'selskapet', namn: 'Botane', ik: '▣' },
+  { id: 'selskapet', namn: 'Motoren', ik: '▣' },
   { id: 'meklarar', namn: 'Kontoar', ik: '⇄' },
   { id: 'uttak', namn: 'Uttak', ik: '⇣' },
   { id: 'sanning', namn: 'Sanning', ik: '◇' },
@@ -50,6 +50,19 @@ export function alderTekst(ts) {
   const t = Math.round(m / 60);
   if (t < 36) return `${t} t sidan`;
   return `${Math.round(t / 24)} d sidan`;
+}
+
+export function motorStatusFersk(ts, no = Date.now()) {
+  const tid = typeof ts === 'string' ? Date.parse(ts) : NaN;
+  return Number.isFinite(tid) && no >= tid && no - tid <= 15 * 60 * 1000;
+}
+
+export function useStatusKlokke() {
+  const [, oppdater] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => oppdater(n => n + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
 }
 
 /* Tal som tel opp frå 0 (referanse A). Berre pynt: sluttverdien er alltid den ekte. */
@@ -124,17 +137,17 @@ export function aktivitetslogg(tilstand, tankar, no = Date.now()) {
 }
 
 export function Topp({ tilstand, tittel }) {
+  useStatusKlokke();
   // Sida handlar berre om arbitrasje (Sondre 21. sep 2026): toppen viser motoren i Zurich, ikkje dei gamle agentane.
   const a = tilstand && tilstand.arb;
-  const botar = a && a.botar && a.botar.tal ? Object.values(a.botar.tal).reduce((x, y) => x + y, 0) : 480;
-  const fersk = a && a.ts && Date.now() - new Date(a.ts).getTime() < 3 * 3600 * 1000;
-  const modus = !a ? 'INGEN STATUS' : (a.pause ? 'PAUSE' : (a.live ? 'EKTE' : 'AV'));
-  const tekst = a ? `${a.pause ? 'PAUSE' : (a.live ? 'ARBITRASJE PÅ' : 'ARBITRASJE AV')} · ${botar} botar skannar ${fmt(a.par)} like par · status ${alderTekst(a.ts)}`
+  const fersk = a && motorStatusFersk(a.ts);
+  const modus = !a ? 'INGEN STATUS' : (!fersk ? 'GAMMAL STATUS' : (a.pause ? 'PAUSE' : (a.live ? 'EKTE' : 'AV')));
+  const tekst = a ? `${!fersk ? 'GAMMAL STATUS' : (a.pause ? 'PAUSE' : (a.live ? 'ARBITRASJE PÅ' : 'ARBITRASJE AV'))} · éin motor på éin server · ${fmt(a.par)} like par · status ${alderTekst(a.ts)}`
     : 'INGEN STATUS FRÅ MOTOREN ENNO';
   return html`<header class="topp">
     <h1>Sondres scheme <small>${tittel}</small></h1>
     <span class="modus modus-${modus === 'EKTE' ? 'EKTE' : 'PAPIR'}" title="Ekte handel er på når brytaren er slått på og motoren ikkje står på pause">${modus}</span>
-    <span class="live ${fersk ? '' : 'stille'}" title="Status frå arbitrasjemotoren på serveren i Zurich, henta av skya">
+    <span class="live ${fersk ? '' : 'stille'}" title="Status frå arbitrasjemotoren på serveren i Zurich; nettsida blir oppdatert kvart femte minutt">
       <span class="prikk"></span> ${tekst}</span>
   </header>`;
 }

@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'preact/hooks';
-import { html, Tom, Flis, fmt, alderTekst } from '../ui.js';
+import { html, Tom, Flis, fmt, alderTekst, motorStatusFersk, useStatusKlokke } from '../ui.js';
 import { last } from '../data.js';
 
 /* Botane (Sondre 21. sep 2026): 200 speidarar på Kalshi, 200 på Polymarket og 80 koplarar deler éi tavle
    i arbitrasjemotoren i Zurich. Tala kjem frå motoren sjølv. */
-const ROLLE = { kalshi: 'Kalshi-speidar', polymarket: 'Polymarket-speidar', koplar: 'Koplar' };
+const ROLLE = { kalshi: 'Kalshi-prisar', polymarket: 'Polymarket-prisar', koplar: 'Kopling og kontroll' };
 const OPPGÅVE = {
-  kalshi: 'Får JA- og NEI-prisane på sin del av Kalshi-marknadene pusha same augneblink dei endrar seg.',
-  polymarket: 'Får ordrebøkene på sin del av Polymarket-tokena pusha same augneblink dei endrar seg.',
-  koplar: 'Eig ein del av dei like para og reknar JA + NEI + gebyr. Under 1 dollar = moglegheit.',
+  kalshi: 'Les JA- og NEI-prisar frå Kalshi gjennom felles datatilkoplingar.',
+  polymarket: 'Les ordrebøker frå Polymarket gjennom felles datatilkoplingar.',
+  koplar: 'Samanliknar like par og kontrollerer pris, gebyr og handelsreglar før eit kjøp kan vurderast.',
 };
 
 export function Selskapet({ tilstand }) {
   const [d, setD] = useState(undefined);
+  useStatusKlokke();
   useEffect(() => { last('arbitrase').then(setD).catch(() => setD(null)); }, []);
   if (d === undefined) return html`<div class="lastar mono">>>> LASTAR …</div>`;
   const liste = (d && d.botar && d.botar.liste) || [];
-  const tal = (d && d.botar && d.botar.tal) || { kalshi: 200, polymarket: 200, koplar: 80 };
+  const tal = (d && d.botar && d.botar.tal) || {};
   const roller = ['kalshi', 'polymarket', 'koplar'].map((r) => {
     const b = liste.filter((x) => x.rolle === r);
     return { r, n: tal[r] || b.length, aktive: b.filter((x) => x.prisar || x.funn).length,
@@ -26,19 +27,22 @@ export function Selskapet({ tilstand }) {
   const topp = [...liste].filter((x) => x.funn).sort((x, y) => (y.funn - x.funn) || ((y.beste || 0) - (x.beste || 0))).slice(0, 15);
   const ordre = (tilstand && tilstand.ordre) || {};
   return html`
-    <div class="fase">>>> BOTANE // 480 PÅ ÉI FELLES TAVLE</div>
-    <section class="kort"><h2>Tre lag <small>${d && d.ts ? `tal frå motoren ${alderTekst(d.ts)}` : 'ingen status enno'}</small></h2>
+    <div class="fase">>>> MOTOREN // ÉIN SERVER · TRE ARBEIDSOMRÅDE</div>
+    <section class="kort"><h2>Éin motor <small>${d && d.ts ? `tal frå motoren ${alderTekst(d.ts)}` : 'ingen status enno'}</small></h2>
       <div class="tal">
-        ${roller.map((x) => html`<${Flis} v=${x.n} l=${`${ROLLE[x.r]}ar · ${fmt(x.aktive)} aktive`} />`)}
-        <${Flis} v=${d && d.par} l="like par dei deler" />
+        <${Flis} tekst="1" l="handelsmotor" />
+        <${Flis} tekst="1" l="server i Zurich" />
+        <${Flis} tekst="3" l="arbeidsområde" />
+        <${Flis} v=${d && d.par} l="like par i siste måling" />
       </div>
-      ${roller.map((x) => html`<p><b>${ROLLE[x.r]}ar (${x.n}):</b> ${OPPGÅVE[x.r]} <span class="stille">Eig ${fmt(x.eig)} ${x.r === 'koplar' ? 'par' : (x.r === 'kalshi' ? 'marknader' : 'token')} · ${fmt(x.prisar)} prisoppdateringar · ${fmt(x.funn)} funn sidan start.</span></p>`)}
-      <p class="stille">Alle ser alt som står på tavla, så ein speidar på Kalshi og ein på Polymarket «snakkar saman» gjennom koplaren som eig paret. Botane er arbeidsdelar i éin motor, ikkje sjølvstendige KI-ar.</p>
+      ${roller.map((x) => html`<p><b>${ROLLE[x.r]}:</b> ${OPPGÅVE[x.r]} <span class="stille">Følgjer ${fmt(x.eig)} ${x.r === 'koplar' ? 'par' : (x.r === 'kalshi' ? 'marknader' : 'token')} · ${fmt(x.prisar)} prisoppdateringar · ${fmt(x.funn)} funn sidan start.</span></p>`)}
+      <p class="stille">Motoren brukar ei felles pristavle. Namna K, P og A under er interne oppgåvegrupper med teljarar. Talet på slike namn seier ikkje kor mange program som køyrer eller kor god handelen er.</p>
     </section>
 
-    <section class="kort"><h2>Flest funn <small>botar som har funne skilnader over minstemarginen</small></h2>
+    ${d && !motorStatusFersk(d.ts) ? html`<p class="feil">GAMMAL STATUS: tala under stadfestar ikkje kva motoren gjer no.</p>` : null}
+    <section class="kort"><h2>Oppgåvegrupper med flest funn <small>historiske teljarar sidan siste motorstart</small></h2>
       ${topp.length ? html`<div class="scroll"><table class="tabell">
-        <tr><th>Bot</th><th>Rolle</th><th>Funn</th><th>Beste netto</th><th>Eig</th></tr>
+        <tr><th>Gruppe</th><th>Arbeidsområde</th><th>Funn</th><th>Beste netto</th><th>Eig</th></tr>
         ${topp.map((x) => html`<tr><td class="mono">${x.id}</td><td><small>${ROLLE[x.rolle] || x.rolle}</small></td><td class="mono">${fmt(x.funn)}</td>
           <td class="mono">${x.beste != null ? `${fmt(x.beste * 100, 1)} c` : '–'}</td><td class="mono">${fmt(x.eig)}</td></tr>`)}
       </table></div>` : html`<${Tom} tekst="Ingen funn over minstemarginen sidan motoren starta." />`}

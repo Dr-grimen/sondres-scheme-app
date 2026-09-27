@@ -57,6 +57,7 @@ export function Arbitrase() {
     <div class="fase">>>> ARBITRASJE // KALSHI ↔ POLYMARKET · MOTOREN I ZURICH</div>
 
     <section class="kort"><h2>Motoren <small>status ${alderTekst(d.ts)} · henta ${dato(d.henta)}</small></h2>
+      <p class="stille">Nettsida blir oppdatert kvar sjette time. Motoren på serveren køyrer vidare mellom sideoppdateringane. «GAMMAL STATUS» gjeld den sist lagra statusen; sida kan då ikkje stadfeste om handelen er på eller motoren fungerer akkurat no.</p>
       <div class="tal">
         <${Flis} tekst=${t.tekst} kl=${t.kl} l="ekte handel" />
         <${Flis} v=${d.par} l="like par skanna" />
